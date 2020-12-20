@@ -18,6 +18,8 @@ def load_image(name, color_key=None):
         image = image.convert_alpha()
     return image
 
+print(1)
+
 
 if __name__ == '__main__':
     pygame.init()
