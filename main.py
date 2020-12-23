@@ -5,7 +5,7 @@ import os
 pygame.init()
 SIZE = WIDTH, HEIGHT = 1500, 700
 FPS = 60
-MOVE_SPEED = 7
+MOVE_SPEED = 5
 JUMP_POWER = 10
 GRAVITY = 0.25
 screen = pygame.display.set_mode(SIZE)
@@ -78,7 +78,6 @@ class MainCharacter(pygame.sprite.Sprite):
         self.is_on_the_floor = False
         self.rect.y += self.vy
         self.collide()
-        print(self.rect.bottom)
         self.rect.x += self.vx
         self.collide()
 
@@ -91,12 +90,18 @@ class MainCharacter(pygame.sprite.Sprite):
                     if self.vx < 0:
                         self.rect.left = p.rect.right
                 if self.vy > 0:
-                    self.rect.bottom = p.rect.top
-                    self.is_on_the_floor = True
-                    self.vy = 0
+                    if p.rect.top + 20 >= self.rect.bottom >= p.rect.top:
+                        self.rect.bottom = p.rect.top
+                        self.is_on_the_floor = True
+                        self.vy = 0
+                    else:
+                        self.vx = 0
                 if self.vy < 0:
-                    self.rect.top = p.rect.bottom
-                    self.vy = 0
+                    if p.rect.bottom - 20 <= self.rect.top <= p.rect.bottom:
+                        self.rect.top = p.rect.bottom
+                        self.vy = 0
+                    else:
+                        self.vx = 0
     
 
 def load_menu():
@@ -127,7 +132,8 @@ if __name__ == '__main__':
     screen.blit(background, (0, 0))
     left, right, up = False, False, False
     hero = MainCharacter((100, 100))
-    for x in range(100):
+    Platform((150, 300))
+    for x in range(28):
         Platform((x * 50, 500))
     while running:
         for event in pygame.event.get():
