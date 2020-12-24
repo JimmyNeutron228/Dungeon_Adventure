@@ -31,7 +31,7 @@ def load_image(directory, name, color_key=None):
 
 
 hero_sprite = load_image('Sprites/MainCharacters/Ninja Frog', 'idle.png', -1)
-grass_platform_image = load_image('Sprites/Terrain', 'grass_platform.png', -1)
+grass_platform_image = load_image('Sprites/Terrain', 'grass.png')
 all_sprites = pygame.sprite.Group()
 hero_group = pygame.sprite.Group()
 platforms_group = pygame.sprite.Group()
