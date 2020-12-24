@@ -1,7 +1,6 @@
 import pygame
 import os
 
-print(1)
 
 pygame.init()
 SIZE = WIDTH, HEIGHT = 1500, 700
@@ -30,7 +29,11 @@ def load_image(directory, name, color_key=None):
     return image
 
 
-hero_sprite = load_image('Sprites/MainCharacters/Ninja Frog', 'idle.png', -1)
+hero_standing_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'idle.png', -1)
+hero_running_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'Run.png', -1)
+hero_falling_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'Fall.png', -1)
+hero_jumping_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'Jump.png', -1)
+hero_wall_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'Wall Jump.png', -1)
 grass_platform_image = load_image('Sprites/Terrain', 'grass.png')
 all_sprites = pygame.sprite.Group()
 hero_group = pygame.sprite.Group()
@@ -56,7 +59,12 @@ class Platform(pygame.sprite.Sprite):
 class MainCharacter(pygame.sprite.Sprite):
     def __init__(self, pos):
         super().__init__(all_sprites, hero_group)
-        self.image = hero_sprite
+        self.frame = []
+        self.pos = pos
+        self.sheet = hero_standing_sheet
+        self.cut_sheets(self.sheet, 11, 1, -1)
+        self.cur_frame = 0
+        self.image = self.frame[self.cur_frame]
         self.rect = self.image.get_rect()
         self.mask = pygame.mask.from_surface(self.image)
         self.rect.x, self.rect.y = pos
@@ -64,6 +72,32 @@ class MainCharacter(pygame.sprite.Sprite):
         self.vy = 0
         self.is_on_the_floor = False
         
+    def cut_sheets(self, sheet, columns, rows, sheet_fl):
+        if sheet_fl:
+            self.frame.clear()
+            if not hasattr(self, 'rect'):
+                self.rect = pygame.Rect(self.pos[0], self.pos[1], sheet.get_width() // columns,
+                                        sheet.get_height() // rows)
+            else:
+                self.rect = pygame.Rect(self.rect.x, self.rect.y + 1,
+                                        sheet.get_width() // columns, sheet.get_height() // rows)
+        else:
+            self.frame.clear()
+            if not hasattr(self, 'rect'):
+                self.rect = pygame.Rect(self.pos[0], self.pos[1], sheet.get_width() // columns,
+                                        sheet.get_height() // rows)
+            else:
+                self.rect = pygame.Rect(self.rect.x, self.rect.y, sheet.get_width() // columns,
+                                        sheet.get_height() // rows)
+        for j in range(rows):
+            for i in range(columns):
+                frame_coords = (self.rect.w * i, self.rect.h * j)
+                self.frame.append(sheet.subsurface(pygame.Rect(frame_coords, self.rect.size)))
+
+    def update_animation(self):
+        self.cur_frame = (self.cur_frame + 1) % len(self.frame)
+        self.image = self.frame[self.cur_frame]
+     
     def update(self, left, right, up):
         if up:
             if self.is_on_the_floor:
@@ -81,6 +115,17 @@ class MainCharacter(pygame.sprite.Sprite):
         self.collide()
         self.rect.x += self.vx
         self.collide()
+        if self.vx == 0 and self.vy == 0:
+            self.change_sheet(hero_standing_sheet, 11, 1, -1)
+        else:
+            if self.vy > 0:
+                self.change_sheet(hero_falling_sheet, 1, 1)
+            elif self.vy < 0:
+                self.change_sheet(hero_jumping_sheet, 1, 1)
+            elif self.vy == 0 and self.vx > 0:
+                self.change_sheet(hero_running_sheet, 12, 1)
+            elif self.vy == 0 and self.vx < 0:
+                self.change_sheet(hero_running_sheet, 12, 1)
 
     def collide(self):
         for p in platforms_group:
@@ -104,6 +149,12 @@ class MainCharacter(pygame.sprite.Sprite):
                     else:
                         self.vx = 0
     
+    def change_sheet(self, new_sheet, cols, rows, sheet_fl=None):
+        self.sheet = new_sheet
+        self.cut_sheets(self.sheet, cols, rows, sheet_fl)
+        self.cur_frame = 0
+        self.image = self.frame[self.cur_frame]
+
 
 def load_menu():
     # Добавление интерфейса меню
@@ -159,5 +210,6 @@ if __name__ == '__main__':
         platforms_group.draw(screen)
         hero_group.draw(screen)
         hero.update(left, right, up)
+        hero.update_animation()
         clock.tick(FPS)
     pygame.quit()
