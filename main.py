@@ -33,6 +33,10 @@ hero_standing_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'idle.png'
 hero_running_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'Run.png', -1)
 hero_falling_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'Fall.png', -1)
 hero_jumping_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'Jump.png', -1)
+hero_lstanding_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'idle_left.png', -1)
+hero_lrunning_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'run_left.png', -1)
+hero_lfalling_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'fall_left.png', -1)
+hero_ljumping_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'jump_left.png', -1)
 hero_wall_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'Wall Jump.png', -1)
 grass_platform_image = load_image('Sprites/Terrain', 'grass.png')
 all_sprites = pygame.sprite.Group()
@@ -62,7 +66,7 @@ class MainCharacter(pygame.sprite.Sprite):
         self.frame = []
         self.pos = pos
         self.sheet = hero_standing_sheet
-        self.cut_sheets(self.sheet, 11, 1, -1)
+        self.cut_sheets(self.sheet, 11, 1, 0)
         self.cur_frame = 0
         self.image = self.frame[self.cur_frame]
         self.rect = self.image.get_rect()
@@ -71,33 +75,24 @@ class MainCharacter(pygame.sprite.Sprite):
         self.vx = 0
         self.vy = 0
         self.is_on_the_floor = False
-        
-    def cut_sheets(self, sheet, columns, rows, sheet_fl):
-        if sheet_fl:
-            self.frame.clear()
-            if not hasattr(self, 'rect'):
-                self.rect = pygame.Rect(self.pos[0], self.pos[1], sheet.get_width() // columns,
-                                        sheet.get_height() // rows)
-            else:
-                self.rect = pygame.Rect(self.rect.x, self.rect.y + 1,
-                                        sheet.get_width() // columns, sheet.get_height() // rows)
+    
+    def cut_sheets(self, sheet, columns, rows, num):
+        self.frame.clear()
+        if not hasattr(self, 'rect'):
+            self.rect = pygame.Rect(self.pos[0], self.pos[1], sheet.get_width() // columns,
+                                    sheet.get_height() // rows)
         else:
-            self.frame.clear()
-            if not hasattr(self, 'rect'):
-                self.rect = pygame.Rect(self.pos[0], self.pos[1], sheet.get_width() // columns,
-                                        sheet.get_height() // rows)
-            else:
-                self.rect = pygame.Rect(self.rect.x, self.rect.y, sheet.get_width() // columns,
-                                        sheet.get_height() // rows)
+            self.rect = pygame.Rect(self.rect.x, self.rect.y + num, sheet.get_width() // columns,
+                                    sheet.get_height() // rows)
         for j in range(rows):
             for i in range(columns):
                 frame_coords = (self.rect.w * i, self.rect.h * j)
                 self.frame.append(sheet.subsurface(pygame.Rect(frame_coords, self.rect.size)))
-
+    
     def update_animation(self):
         self.cur_frame = (self.cur_frame + 1) % len(self.frame)
         self.image = self.frame[self.cur_frame]
-     
+    
     def update(self, left, right, up):
         if up:
             if self.is_on_the_floor:
@@ -114,19 +109,36 @@ class MainCharacter(pygame.sprite.Sprite):
         self.rect.y += self.vy
         self.collide()
         self.rect.x += self.vx
-        self.collide()
+        if not self.sheet == hero_running_sheet:
+            self.collide()
         if self.vx == 0 and self.vy == 0:
-            self.change_sheet(hero_standing_sheet, 11, 1, -1)
+            if self.sheet == hero_lfalling_sheet or self.sheet == hero_lrunning_sheet:
+                self.change_sheet(hero_lstanding_sheet, 11, 1, 2)
+            if self.sheet == hero_falling_sheet or self.sheet == hero_running_sheet:
+                self.change_sheet(hero_standing_sheet, 11, 1, 2)
         else:
             if self.vy > 0:
-                self.change_sheet(hero_falling_sheet, 1, 1)
+                if self.vx > 0 or self.sheet == hero_jumping_sheet:
+                    self.change_sheet(hero_falling_sheet, 1, 1)
+                if self.vx < 0 or self.sheet == hero_ljumping_sheet:
+                    self.change_sheet(hero_lfalling_sheet, 1, 1)
             elif self.vy < 0:
-                self.change_sheet(hero_jumping_sheet, 1, 1)
+                if (self.sheet == hero_running_sheet or self.sheet == hero_standing_sheet or
+                        self.vx > 0):
+                    self.change_sheet(hero_jumping_sheet, 1, 1)
+                if (self.sheet == hero_lrunning_sheet or self.sheet == hero_lstanding_sheet or
+                        self.vx < 0):
+                    self.change_sheet(hero_ljumping_sheet, 1, 1)
             elif self.vy == 0 and self.vx > 0:
-                self.change_sheet(hero_running_sheet, 12, 1)
+                if (self.sheet == hero_standing_sheet or self.sheet == hero_falling_sheet or
+                        self.sheet == hero_lstanding_sheet or self.sheet == hero_lfalling_sheet):
+                    self.change_sheet(hero_running_sheet, 12, 1)
             elif self.vy == 0 and self.vx < 0:
-                self.change_sheet(hero_running_sheet, 12, 1)
-
+                if (self.sheet == hero_lstanding_sheet or self.sheet == hero_lfalling_sheet or
+                        self.sheet == hero_standing_sheet or self.sheet == hero_falling_sheet):
+                    self.change_sheet(hero_lrunning_sheet, 12, 1)
+        self.collide()
+    
     def collide(self):
         for p in platforms_group:
             if pygame.sprite.collide_mask(self, p):
@@ -137,21 +149,21 @@ class MainCharacter(pygame.sprite.Sprite):
                         self.rect.left = p.rect.right
                 if self.vy > 0:
                     if p.rect.top + 20 >= self.rect.bottom >= p.rect.top:
-                        self.rect.bottom = p.rect.top
+                        self.rect.bottom = p.rect.top + 1
                         self.is_on_the_floor = True
                         self.vy = 0
                     else:
                         self.vx = 0
                 if self.vy < 0:
                     if p.rect.bottom - 20 <= self.rect.top <= p.rect.bottom:
-                        self.rect.top = p.rect.bottom
+                        self.rect.top = p.rect.bottom - 1
                         self.vy = 0
                     else:
                         self.vx = 0
     
-    def change_sheet(self, new_sheet, cols, rows, sheet_fl=None):
+    def change_sheet(self, new_sheet, cols, rows, num=0):
         self.sheet = new_sheet
-        self.cut_sheets(self.sheet, cols, rows, sheet_fl)
+        self.cut_sheets(self.sheet, cols, rows, num)
         self.cur_frame = 0
         self.image = self.frame[self.cur_frame]
 
