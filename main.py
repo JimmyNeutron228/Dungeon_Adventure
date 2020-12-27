@@ -3,7 +3,7 @@ import os
 
 
 pygame.init()
-SIZE = WIDTH, HEIGHT = 1500, 700
+SIZE = WIDTH, HEIGHT = 800, 600
 FPS = 60
 MOVE_SPEED = 5
 JUMP_POWER = 10
@@ -168,6 +168,21 @@ class MainCharacter(pygame.sprite.Sprite):
         self.image = self.frame[self.cur_frame]
 
 
+class Camera:
+    def __init__(self, field_size):
+        self.dx = 0
+        self.dy = 0
+        self.field_size = field_size
+
+    def apply(self, obj):
+        obj.rect.x += self.dx
+        obj.rect.y += self.dy
+
+    def update(self, target):
+        self.dx = -(target.rect.x + target.rect.width // 2 - WIDTH // 2)
+        self.dy = -(target.rect.y + target.rect.height // 2 - HEIGHT // 2)
+
+
 def load_menu():
     # Добавление интерфейса меню
     pygame.display.flip()
@@ -199,6 +214,7 @@ if __name__ == '__main__':
     Platform((150, 300))
     for x in range(28):
         Platform((x * 50, 500))
+    camera = Camera((hero.rect.x, hero.rect.y))
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -218,6 +234,9 @@ if __name__ == '__main__':
             if event.type == pygame.KEYUP and event.key == pygame.K_UP:
                 up = False
         pygame.display.flip()
+        camera.update(hero)
+        for sprite in all_sprites:
+            camera.apply(sprite)
         screen.blit(background, (0, 0))
         platforms_group.draw(screen)
         hero_group.draw(screen)
