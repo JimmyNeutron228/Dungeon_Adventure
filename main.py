@@ -131,11 +131,13 @@ class MainCharacter(pygame.sprite.Sprite):
                     self.change_sheet(hero_ljumping_sheet, 1, 1)
             elif self.vy == 0 and self.vx > 0:
                 if (self.sheet == hero_standing_sheet or self.sheet == hero_falling_sheet or
-                        self.sheet == hero_lstanding_sheet or self.sheet == hero_lfalling_sheet):
+                        self.sheet == hero_lstanding_sheet or self.sheet == hero_lfalling_sheet or
+                        self.sheet == hero_lrunning_sheet):
                     self.change_sheet(hero_running_sheet, 12, 1)
             elif self.vy == 0 and self.vx < 0:
                 if (self.sheet == hero_lstanding_sheet or self.sheet == hero_lfalling_sheet or
-                        self.sheet == hero_standing_sheet or self.sheet == hero_falling_sheet):
+                        self.sheet == hero_standing_sheet or self.sheet == hero_falling_sheet or
+                        self.sheet == hero_running_sheet):
                     self.change_sheet(hero_lrunning_sheet, 12, 1)
         self.collide()
     
