@@ -1,7 +1,8 @@
+# Импорт нужных библиотек
 import pygame
 import os
 
-
+# Инициализация pygame, создание окна и определение констант
 pygame.init()
 SIZE = WIDTH, HEIGHT = 800, 600
 FPS = 60
@@ -12,6 +13,8 @@ screen = pygame.display.set_mode(SIZE)
 pygame.display.set_caption("Fruit Ninja 2.0")
 clock = pygame.time.Clock()
 
+
+# Загрузка картинки
 
 def load_image(directory, name, color_key=None):
     fullname = os.path.join(directory, name)
@@ -29,6 +32,7 @@ def load_image(directory, name, color_key=None):
     return image
 
 
+# Спрайты героя
 hero_standing_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'idle.png', -1)
 hero_running_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'Run.png', -1)
 hero_falling_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'Fall.png', -1)
@@ -37,13 +41,26 @@ hero_lstanding_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'idle_lef
 hero_lrunning_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'run_left.png', -1)
 hero_lfalling_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'fall_left.png', -1)
 hero_ljumping_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'jump_left.png', -1)
-apple_sheet = load_image('Sprites/Items/Fruits', 'Apple.png', -1)
-banana_sheet = load_image('Sprites/Items/Fruits', 'Bananas.png', -1)
-melon_sheet = load_image('Sprites/Items/Fruits', 'Melon.png', -1)
-strawberry_sheet = load_image('Sprites/Items/Fruits', 'Strawberry.png', -1)
-collected_fruit_sheet = load_image('Sprites/Items/Fruits', 'Collected.png')
-hero_wall_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'Wall Jump.png', -1)
-grass_platform_image = load_image('Sprites/Terrain', 'grass.png')
+# Словарь картинок для фруктов
+fruit_images = {
+    'apple': load_image('Sprites/Items/Fruits', 'Apple.png', -1),
+    'banana': load_image('Sprites/Items/Fruits', 'Bananas.png', -1),
+    'melon': load_image('Sprites/Items/Fruits', 'Melon.png', -1),
+    'strawberry': load_image('Sprites/Items/Fruits', 'Strawberry.png', -1)}
+# Словарь картинок для природных объектов
+platform_images = {
+    'grass': load_image('Sprites/Terrain', 'grass.png'),
+    'black_grass': load_image('Sprites/Terrain', 'black_grass.png'),
+    'white_grass': load_image('Sprites/Terrain', 'white_grass.png'),
+    'g_brown_stone': load_image('Sprites/Terrain/brown_stone', '1.png'),
+    'v_brown_stone': load_image('Sprites/Terrain/brown_stone', '2.png'),
+    'g_gold_stone': load_image('Sprites/Terrain/gold_stone', '1.png'),
+    'v_gold_stone': load_image('Sprites/Terrain/gold_stone', '2.png'),
+    'g_gray_stone': load_image('Sprites/Terrain/gray_stone', '1.png'),
+    'v_gray_stone': load_image('Sprites/Terrain/gray_stone', '2.png'),
+    'g_orange_stone': load_image('Sprites/Terrain/orange_stone', '1.png'),
+    'v_orange_stone': load_image('Sprites/Terrain/orange_stone', '2.png')}
+# Создание всех груп спрайтов
 all_sprites = pygame.sprite.Group()
 hero_group = pygame.sprite.Group()
 fruit_group = pygame.sprite.Group()
@@ -51,16 +68,18 @@ platforms_group = pygame.sprite.Group()
 evil_dudes_group = pygame.sprite.Group()
 
 
+# Функция выхода из программы
 def terminate():
     pygame.quit()
     exit()
 
 
+# Класс яблок
 class Apple(pygame.sprite.Sprite):
     def __init__(self, pos):
         super().__init__(all_sprites, fruit_group)
         self.frame = []
-        self.sheet = apple_sheet
+        self.sheet = fruit_images['apple']
         self.pos = pos
         self.cut_sheets(self.sheet, 17, 1)
         self.cur_frame = 0
@@ -76,7 +95,7 @@ class Apple(pygame.sprite.Sprite):
             for i in range(columns):
                 frame_coords = (self.rect.w * i, self.rect.h * j)
                 self.frame.append(sheet.subsurface(pygame.Rect(frame_coords, self.rect.size)))
-
+    
     def update_animation(self):
         self.cur_frame = (self.cur_frame + 1) % len(self.frame)
         self.image = self.frame[self.cur_frame]
@@ -87,11 +106,12 @@ class Apple(pygame.sprite.Sprite):
             self.kill()
 
 
+# Класс бананов
 class Banana(pygame.sprite.Sprite):
     def __init__(self, pos):
         super().__init__(all_sprites, fruit_group)
         self.frame = []
-        self.sheet = banana_sheet
+        self.sheet = fruit_images['banana']
         self.pos = pos
         self.cut_sheets(self.sheet, 17, 1)
         self.cur_frame = 0
@@ -102,7 +122,7 @@ class Banana(pygame.sprite.Sprite):
     
     def cut_sheets(self, sheet, columns, rows):
         self.rect = pygame.Rect(self.pos[0], self.pos[1], sheet.get_width() // columns,
-                                                          sheet.get_height() // rows)
+                                sheet.get_height() // rows)
         for j in range(rows):
             for i in range(columns):
                 frame_coords = (self.rect.w * i, self.rect.h * j)
@@ -118,11 +138,12 @@ class Banana(pygame.sprite.Sprite):
             self.kill()
 
 
+# Класс арбузов
 class Melon(pygame.sprite.Sprite):
     def __init__(self, pos):
         super().__init__(all_sprites, fruit_group)
         self.frame = []
-        self.sheet = melon_sheet
+        self.sheet = fruit_images['melon']
         self.pos = pos
         self.cut_sheets(self.sheet, 17, 1)
         self.cur_frame = 0
@@ -133,7 +154,7 @@ class Melon(pygame.sprite.Sprite):
     
     def cut_sheets(self, sheet, columns, rows):
         self.rect = pygame.Rect(self.pos[0], self.pos[1], sheet.get_width() // columns,
-                                                          sheet.get_height() // rows)
+                                sheet.get_height() // rows)
         for j in range(rows):
             for i in range(columns):
                 frame_coords = (self.rect.w * i, self.rect.h * j)
@@ -149,11 +170,12 @@ class Melon(pygame.sprite.Sprite):
             self.kill()
 
 
+# Класс клубничек
 class Strawberry(pygame.sprite.Sprite):
     def __init__(self, pos):
         super().__init__(all_sprites, fruit_group)
         self.frame = []
-        self.sheet = strawberry_sheet
+        self.sheet = fruit_images['strawberry']
         self.pos = pos
         self.cut_sheets(self.sheet, 17, 1)
         self.cur_frame = 0
@@ -164,7 +186,7 @@ class Strawberry(pygame.sprite.Sprite):
     
     def cut_sheets(self, sheet, columns, rows):
         self.rect = pygame.Rect(self.pos[0], self.pos[1], sheet.get_width() // columns,
-                                                          sheet.get_height() // rows)
+                                sheet.get_height() // rows)
         for j in range(rows):
             for i in range(columns):
                 frame_coords = (self.rect.w * i, self.rect.h * j)
@@ -180,15 +202,16 @@ class Strawberry(pygame.sprite.Sprite):
             self.kill()
 
 
+# Класс платформ
 class Platform(pygame.sprite.Sprite):
-    def __init__(self, pos):
-        super().__init__(all_sprites, platforms_group)
-        self.image = grass_platform_image
+    def __init__(self, tile_type, pos_x, pos_y):
+        super().__init__(platforms_group, all_sprites)
+        self.image = platform_images[tile_type]
         self.rect = self.image.get_rect()
-        self.mask = pygame.mask.from_surface(self.image)
-        self.rect.x, self.rect.y = pos
+        self.rect.x, self.rect.y = pos_x * 48, pos_y * 48
 
 
+# Класс персонажа
 class MainCharacter(pygame.sprite.Sprite):
     def __init__(self, pos):
         super().__init__(all_sprites, hero_group)
@@ -275,6 +298,7 @@ class MainCharacter(pygame.sprite.Sprite):
         self.collide()
     
     def collide(self):
+        fl = 0
         for p in platforms_group:
             if pygame.sprite.collide_mask(self, p):
                 if self.rect.bottom < p.rect.top:
@@ -282,19 +306,21 @@ class MainCharacter(pygame.sprite.Sprite):
                         self.rect.right = p.rect.left
                     if self.vx < 0:
                         self.rect.left = p.rect.right
-                if self.vy > 0:
-                    if p.rect.top + 20 >= self.rect.bottom >= p.rect.top:
-                        self.rect.bottom = p.rect.top + 1
-                        self.is_on_the_floor = True
-                        self.vy = 0
-                    else:
-                        self.vx = 0
-                if self.vy < 0:
-                    if p.rect.bottom - 20 <= self.rect.top <= p.rect.bottom:
-                        self.rect.top = p.rect.bottom - 1
-                        self.vy = 0
-                    else:
-                        self.vx = 0
+                    fl = 1
+                if not fl:
+                    if self.vy > 0:
+                        if p.rect.top + 20 >= self.rect.bottom >= p.rect.top:
+                            self.rect.bottom = p.rect.top + 1
+                            self.is_on_the_floor = True
+                            self.vy = 0
+                        else:
+                            self.vx = 0
+                    if self.vy < 0:
+                        if p.rect.bottom - 20 <= self.rect.top <= p.rect.bottom:
+                            self.rect.top = p.rect.bottom - 1
+                            self.vy = 0
+                        else:
+                            self.vx = 0
     
     def change_sheet(self, new_sheet, cols, rows, num=0):
         self.sheet = new_sheet
@@ -303,21 +329,23 @@ class MainCharacter(pygame.sprite.Sprite):
         self.image = self.frame[self.cur_frame]
 
 
+# Класс камеры
 class Camera:
     def __init__(self, field_size):
         self.dx = 0
         self.dy = 0
         self.field_size = field_size
-
+    
     def apply(self, obj):
         obj.rect.x += self.dx
         obj.rect.y += self.dy
-
+    
     def update(self, target):
         self.dx = -(target.rect.x + target.rect.width // 2 - WIDTH // 2)
         self.dy = -(target.rect.y + target.rect.height // 2 - HEIGHT // 2)
 
 
+# Функция для загрузки меню
 def load_menu():
     # Добавление интерфейса меню
     pygame.display.flip()
@@ -329,6 +357,16 @@ def load_menu():
                 return
 
 
+# Функция для загрузки уровня из текстового файла
+def load_level(filename):
+    filename = 'levels/' + filename
+    with open(filename, 'r') as map_file:
+        level_map = [line.strip() for line in map_file]
+        max_width = max(map(len, level_map))
+    return list(map(lambda x: x.ljust(max_width, '.'), level_map))
+
+
+# Функция для загрузки заднего фона
 def load_back_ground(directory, name):
     back_ground_sprite = load_image(directory, name)
     back_ground_surface = pygame.Surface(SIZE, pygame.SRCALPHA, 32)
@@ -340,17 +378,15 @@ def load_back_ground(directory, name):
     return back_ground_surface
 
 
+# Создание всех объектов, главный игровой цикл и отслеживание всех событий в игре
 if __name__ == '__main__':
     running = True
     background = load_back_ground('Sprites/Background', 'Blue.png')
     screen.blit(background, (0, 0))
     left, right, up = False, False, False
     hero = MainCharacter((100, 100))
-    Platform((150, 300))
-    for i in range(10):
-        Apple((250 + i * 20, 300))
-    for x in range(28):
-        Platform((x * 50, 500))
+    for i in range(23):
+        Platform('grass', i, 300 // 48)
     camera = Camera((hero.rect.x, hero.rect.y))
     while running:
         for event in pygame.event.get():
@@ -384,5 +420,4 @@ if __name__ == '__main__':
             fruit.update_animation()
             fruit.collide(hero)
         clock.tick(FPS)
-        print(hero.apple_counter)
     pygame.quit()
