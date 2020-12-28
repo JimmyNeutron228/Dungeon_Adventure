@@ -37,18 +37,147 @@ hero_lstanding_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'idle_lef
 hero_lrunning_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'run_left.png', -1)
 hero_lfalling_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'fall_left.png', -1)
 hero_ljumping_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'jump_left.png', -1)
+apple_sheet = load_image('Sprites/Items/Fruits', 'Apple.png', -1)
+banana_sheet = load_image('Sprites/Items/Fruits', 'Bananas.png', -1)
+melon_sheet = load_image('Sprites/Items/Fruits', 'Melon.png', -1)
+strawberry_sheet = load_image('Sprites/Items/Fruits', 'Strawberry.png', -1)
+collected_fruit_sheet = load_image('Sprites/Items/Fruits', 'Collected.png')
 hero_wall_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'Wall Jump.png', -1)
 grass_platform_image = load_image('Sprites/Terrain', 'grass.png')
 all_sprites = pygame.sprite.Group()
 hero_group = pygame.sprite.Group()
+fruit_group = pygame.sprite.Group()
 platforms_group = pygame.sprite.Group()
-fruits_group = pygame.sprite.Group()
 evil_dudes_group = pygame.sprite.Group()
 
 
 def terminate():
     pygame.quit()
     exit()
+
+
+class Apple(pygame.sprite.Sprite):
+    def __init__(self, pos):
+        super().__init__(all_sprites, fruit_group)
+        self.frame = []
+        self.sheet = apple_sheet
+        self.pos = pos
+        self.cut_sheets(self.sheet, 17, 1)
+        self.cur_frame = 0
+        self.image = self.frame[self.cur_frame]
+        self.rect = self.image.get_rect()
+        self.mask = pygame.mask.from_surface(self.image)
+        self.rect.x, self.rect.y = pos
+    
+    def cut_sheets(self, sheet, columns, rows):
+        self.rect = pygame.Rect(self.pos[0], self.pos[1], sheet.get_width() // columns,
+                                sheet.get_height() // rows)
+        for j in range(rows):
+            for i in range(columns):
+                frame_coords = (self.rect.w * i, self.rect.h * j)
+                self.frame.append(sheet.subsurface(pygame.Rect(frame_coords, self.rect.size)))
+
+    def update_animation(self):
+        self.cur_frame = (self.cur_frame + 1) % len(self.frame)
+        self.image = self.frame[self.cur_frame]
+    
+    def collide(self, obj):
+        if pygame.sprite.collide_mask(obj, self):
+            obj.apple_counter += 1
+            self.kill()
+
+
+class Banana(pygame.sprite.Sprite):
+    def __init__(self, pos):
+        super().__init__(all_sprites, fruit_group)
+        self.frame = []
+        self.sheet = banana_sheet
+        self.pos = pos
+        self.cut_sheets(self.sheet, 17, 1)
+        self.cur_frame = 0
+        self.image = self.frame[self.cur_frame]
+        self.rect = self.image.get_rect()
+        self.mask = pygame.mask.from_surface(self.image)
+        self.rect.x, self.rect.y = pos
+    
+    def cut_sheets(self, sheet, columns, rows):
+        self.rect = pygame.Rect(self.pos[0], self.pos[1], sheet.get_width() // columns,
+                                                          sheet.get_height() // rows)
+        for j in range(rows):
+            for i in range(columns):
+                frame_coords = (self.rect.w * i, self.rect.h * j)
+                self.frame.append(sheet.subsurface(pygame.Rect(frame_coords, self.rect.size)))
+    
+    def update_animation(self):
+        self.cur_frame = (self.cur_frame + 1) % len(self.frame)
+        self.image = self.frame[self.cur_frame]
+    
+    def collide(self, obj):
+        if pygame.sprite.collide_mask(obj, self):
+            obj.banana_counter += 1
+            self.kill()
+
+
+class Melon(pygame.sprite.Sprite):
+    def __init__(self, pos):
+        super().__init__(all_sprites, fruit_group)
+        self.frame = []
+        self.sheet = melon_sheet
+        self.pos = pos
+        self.cut_sheets(self.sheet, 17, 1)
+        self.cur_frame = 0
+        self.image = self.frame[self.cur_frame]
+        self.rect = self.image.get_rect()
+        self.mask = pygame.mask.from_surface(self.image)
+        self.rect.x, self.rect.y = pos
+    
+    def cut_sheets(self, sheet, columns, rows):
+        self.rect = pygame.Rect(self.pos[0], self.pos[1], sheet.get_width() // columns,
+                                                          sheet.get_height() // rows)
+        for j in range(rows):
+            for i in range(columns):
+                frame_coords = (self.rect.w * i, self.rect.h * j)
+                self.frame.append(sheet.subsurface(pygame.Rect(frame_coords, self.rect.size)))
+    
+    def update_animation(self):
+        self.cur_frame = (self.cur_frame + 1) % len(self.frame)
+        self.image = self.frame[self.cur_frame]
+    
+    def collide(self, obj):
+        if pygame.sprite.collide_mask(obj, self):
+            obj.melon_counter += 1
+            self.kill()
+
+
+class Strawberry(pygame.sprite.Sprite):
+    def __init__(self, pos):
+        super().__init__(all_sprites, fruit_group)
+        self.frame = []
+        self.sheet = strawberry_sheet
+        self.pos = pos
+        self.cut_sheets(self.sheet, 17, 1)
+        self.cur_frame = 0
+        self.image = self.frame[self.cur_frame]
+        self.rect = self.image.get_rect()
+        self.mask = pygame.mask.from_surface(self.image)
+        self.rect.x, self.rect.y = pos
+    
+    def cut_sheets(self, sheet, columns, rows):
+        self.rect = pygame.Rect(self.pos[0], self.pos[1], sheet.get_width() // columns,
+                                                          sheet.get_height() // rows)
+        for j in range(rows):
+            for i in range(columns):
+                frame_coords = (self.rect.w * i, self.rect.h * j)
+                self.frame.append(sheet.subsurface(pygame.Rect(frame_coords, self.rect.size)))
+    
+    def update_animation(self):
+        self.cur_frame = (self.cur_frame + 1) % len(self.frame)
+        self.image = self.frame[self.cur_frame]
+    
+    def collide(self, obj):
+        if pygame.sprite.collide_mask(obj, self):
+            obj.strawberry_counter += 1
+            self.kill()
 
 
 class Platform(pygame.sprite.Sprite):
@@ -74,6 +203,10 @@ class MainCharacter(pygame.sprite.Sprite):
         self.rect.x, self.rect.y = pos
         self.vx = 0
         self.vy = 0
+        self.apple_counter = 0
+        self.banana_counter = 0
+        self.melon_counter = 0
+        self.strawberry_counter = 0
         self.is_on_the_floor = False
     
     def cut_sheets(self, sheet, columns, rows, num):
@@ -214,6 +347,8 @@ if __name__ == '__main__':
     left, right, up = False, False, False
     hero = MainCharacter((100, 100))
     Platform((150, 300))
+    for i in range(10):
+        Apple((250 + i * 20, 300))
     for x in range(28):
         Platform((x * 50, 500))
     camera = Camera((hero.rect.x, hero.rect.y))
@@ -241,8 +376,13 @@ if __name__ == '__main__':
             camera.apply(sprite)
         screen.blit(background, (0, 0))
         platforms_group.draw(screen)
+        fruit_group.draw(screen)
         hero_group.draw(screen)
         hero.update(left, right, up)
         hero.update_animation()
+        for fruit in fruit_group:
+            fruit.update_animation()
+            fruit.collide(hero)
         clock.tick(FPS)
+        print(hero.apple_counter)
     pygame.quit()
