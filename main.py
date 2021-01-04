@@ -1,14 +1,15 @@
 # Импорт нужных библиотек
 import pygame
 import os
+import random
 
 # Инициализация pygame, создание окна и определение констант
 pygame.init()
 SIZE = WIDTH, HEIGHT = 800, 600
 FPS = 60
-MOVE_SPEED = 5
-JUMP_POWER = 10
-GRAVITY = 0.25
+MOVE_SPEED = 4
+JUMP_POWER = 9
+GRAVITY = 0.3
 screen = pygame.display.set_mode(SIZE)
 pygame.display.set_caption("Fruit Ninja 2.0")
 clock = pygame.time.Clock()
@@ -66,6 +67,7 @@ hero_group = pygame.sprite.Group()
 fruit_group = pygame.sprite.Group()
 platforms_group = pygame.sprite.Group()
 evil_dudes_group = pygame.sprite.Group()
+bg_group = pygame.sprite.Group()
 
 
 # Функция выхода из программы
@@ -74,15 +76,16 @@ def terminate():
     exit()
 
 
-# Класс яблок
-class Apple(pygame.sprite.Sprite):
-    def __init__(self, pos):
-        super().__init__(all_sprites, fruit_group)
-        self.frame = []
-        self.sheet = fruit_images['apple']
+# Класс фруктов
+class Fruit(pygame.sprite.Sprite):
+    def __init__(self, pos, pic):
+        super().__init__(fruit_group, all_sprites)
+        self.sheet = fruit_images[pic]
+        self.name = pic
         self.pos = pos
-        self.cut_sheets(self.sheet, 17, 1)
+        self.frame = []
         self.cur_frame = 0
+        self.cut_sheets(self.sheet, 17, 1)
         self.image = self.frame[self.cur_frame]
         self.rect = self.image.get_rect()
         self.mask = pygame.mask.from_surface(self.image)
@@ -102,103 +105,14 @@ class Apple(pygame.sprite.Sprite):
     
     def collide(self, obj):
         if pygame.sprite.collide_mask(obj, self):
-            obj.apple_counter += 1
-            self.kill()
-
-
-# Класс бананов
-class Banana(pygame.sprite.Sprite):
-    def __init__(self, pos):
-        super().__init__(all_sprites, fruit_group)
-        self.frame = []
-        self.sheet = fruit_images['banana']
-        self.pos = pos
-        self.cut_sheets(self.sheet, 17, 1)
-        self.cur_frame = 0
-        self.image = self.frame[self.cur_frame]
-        self.rect = self.image.get_rect()
-        self.mask = pygame.mask.from_surface(self.image)
-        self.rect.x, self.rect.y = pos
-    
-    def cut_sheets(self, sheet, columns, rows):
-        self.rect = pygame.Rect(self.pos[0], self.pos[1], sheet.get_width() // columns,
-                                sheet.get_height() // rows)
-        for j in range(rows):
-            for i in range(columns):
-                frame_coords = (self.rect.w * i, self.rect.h * j)
-                self.frame.append(sheet.subsurface(pygame.Rect(frame_coords, self.rect.size)))
-    
-    def update_animation(self):
-        self.cur_frame = (self.cur_frame + 1) % len(self.frame)
-        self.image = self.frame[self.cur_frame]
-    
-    def collide(self, obj):
-        if pygame.sprite.collide_mask(obj, self):
-            obj.banana_counter += 1
-            self.kill()
-
-
-# Класс арбузов
-class Melon(pygame.sprite.Sprite):
-    def __init__(self, pos):
-        super().__init__(all_sprites, fruit_group)
-        self.frame = []
-        self.sheet = fruit_images['melon']
-        self.pos = pos
-        self.cut_sheets(self.sheet, 17, 1)
-        self.cur_frame = 0
-        self.image = self.frame[self.cur_frame]
-        self.rect = self.image.get_rect()
-        self.mask = pygame.mask.from_surface(self.image)
-        self.rect.x, self.rect.y = pos
-    
-    def cut_sheets(self, sheet, columns, rows):
-        self.rect = pygame.Rect(self.pos[0], self.pos[1], sheet.get_width() // columns,
-                                sheet.get_height() // rows)
-        for j in range(rows):
-            for i in range(columns):
-                frame_coords = (self.rect.w * i, self.rect.h * j)
-                self.frame.append(sheet.subsurface(pygame.Rect(frame_coords, self.rect.size)))
-    
-    def update_animation(self):
-        self.cur_frame = (self.cur_frame + 1) % len(self.frame)
-        self.image = self.frame[self.cur_frame]
-    
-    def collide(self, obj):
-        if pygame.sprite.collide_mask(obj, self):
-            obj.melon_counter += 1
-            self.kill()
-
-
-# Класс клубничек
-class Strawberry(pygame.sprite.Sprite):
-    def __init__(self, pos):
-        super().__init__(all_sprites, fruit_group)
-        self.frame = []
-        self.sheet = fruit_images['strawberry']
-        self.pos = pos
-        self.cut_sheets(self.sheet, 17, 1)
-        self.cur_frame = 0
-        self.image = self.frame[self.cur_frame]
-        self.rect = self.image.get_rect()
-        self.mask = pygame.mask.from_surface(self.image)
-        self.rect.x, self.rect.y = pos
-    
-    def cut_sheets(self, sheet, columns, rows):
-        self.rect = pygame.Rect(self.pos[0], self.pos[1], sheet.get_width() // columns,
-                                sheet.get_height() // rows)
-        for j in range(rows):
-            for i in range(columns):
-                frame_coords = (self.rect.w * i, self.rect.h * j)
-                self.frame.append(sheet.subsurface(pygame.Rect(frame_coords, self.rect.size)))
-    
-    def update_animation(self):
-        self.cur_frame = (self.cur_frame + 1) % len(self.frame)
-        self.image = self.frame[self.cur_frame]
-    
-    def collide(self, obj):
-        if pygame.sprite.collide_mask(obj, self):
-            obj.strawberry_counter += 1
+            if self.name == 'apple':
+                obj.apple_counter += 1
+            if self.name == 'banana':
+                obj.banana_counter += 1
+            if self.name == 'apple':
+                obj.melon_counter += 1
+            if self.name == 'apple':
+                obj.strawberry_counter += 1
             self.kill()
 
 
@@ -208,7 +122,16 @@ class Platform(pygame.sprite.Sprite):
         super().__init__(platforms_group, all_sprites)
         self.image = platform_images[tile_type]
         self.rect = self.image.get_rect()
-        self.rect.x, self.rect.y = pos_x * 48, pos_y * 48
+        self.rect.x, self.rect.y = pos_x, pos_y
+
+
+class Background(pygame.sprite.Sprite):
+    def __init__(self, pic):
+        super().__init__(bg_group, all_sprites)
+        self.image = pic
+        self.rect = self.image.get_rect()
+        self.rect.x = -300
+        self.rect.y = -600
 
 
 # Класс персонажа
@@ -226,6 +149,7 @@ class MainCharacter(pygame.sprite.Sprite):
         self.rect.x, self.rect.y = pos
         self.vx = 0
         self.vy = 0
+        self.collide_fl = 0
         self.apple_counter = 0
         self.banana_counter = 0
         self.melon_counter = 0
@@ -253,25 +177,27 @@ class MainCharacter(pygame.sprite.Sprite):
         if up:
             if self.is_on_the_floor:
                 self.vy = -JUMP_POWER
-        if left:
+        if left and self.collide_fl != 1:
             self.vx = -MOVE_SPEED
-        if right:
+        if right and self.collide_fl != 2:
             self.vx = MOVE_SPEED
         if not (left or right):
+            self.collide_fl = 0
             self.vx = 0
         if not self.is_on_the_floor:
             self.vy += GRAVITY
         self.is_on_the_floor = False
         self.rect.y += self.vy
-        self.collide()
+        self.collide(0, self.vy)
         self.rect.x += self.vx
-        if not self.sheet == hero_running_sheet:
-            self.collide()
+        self.collide(self.vx, 0)
         if self.vx == 0 and self.vy == 0:
             if self.sheet == hero_lfalling_sheet or self.sheet == hero_lrunning_sheet:
                 self.change_sheet(hero_lstanding_sheet, 11, 1, 2)
+                self.vx = 0
             if self.sheet == hero_falling_sheet or self.sheet == hero_running_sheet:
                 self.change_sheet(hero_standing_sheet, 11, 1, 2)
+                self.vx = 0
         else:
             if self.vy > 0:
                 if self.vx > 0 or self.sheet == hero_jumping_sheet:
@@ -285,42 +211,43 @@ class MainCharacter(pygame.sprite.Sprite):
                 if (self.sheet == hero_lrunning_sheet or self.sheet == hero_lstanding_sheet or
                         self.vx < 0):
                     self.change_sheet(hero_ljumping_sheet, 1, 1)
-            elif self.vy == 0 and self.vx > 0:
+            elif self.vy == 0 and self.vx > 0 and self.collide_fl != 1:
                 if (self.sheet == hero_standing_sheet or self.sheet == hero_falling_sheet or
-                        self.sheet == hero_lstanding_sheet or self.sheet == hero_lfalling_sheet or
+                    self.sheet == hero_lstanding_sheet or self.sheet == hero_lfalling_sheet or
                         self.sheet == hero_lrunning_sheet):
                     self.change_sheet(hero_running_sheet, 12, 1)
-            elif self.vy == 0 and self.vx < 0:
+            elif self.vy == 0 and self.vx < 0 and self.collide_fl != 2:
                 if (self.sheet == hero_lstanding_sheet or self.sheet == hero_lfalling_sheet or
-                        self.sheet == hero_standing_sheet or self.sheet == hero_falling_sheet or
+                    self.sheet == hero_standing_sheet or self.sheet == hero_falling_sheet or
                         self.sheet == hero_running_sheet):
                     self.change_sheet(hero_lrunning_sheet, 12, 1)
-        self.collide()
+        self.collide(self.vx, 0)
+        self.collide_fl = 0
     
-    def collide(self):
-        fl = 0
+    def collide(self, x, y):
         for p in platforms_group:
             if pygame.sprite.collide_mask(self, p):
-                if self.rect.bottom < p.rect.top:
-                    if self.vx > 0:
-                        self.rect.right = p.rect.left
-                    if self.vx < 0:
-                        self.rect.left = p.rect.right
-                    fl = 1
-                if not fl:
-                    if self.vy > 0:
-                        if p.rect.top + 20 >= self.rect.bottom >= p.rect.top:
-                            self.rect.bottom = p.rect.top + 1
-                            self.is_on_the_floor = True
-                            self.vy = 0
-                        else:
-                            self.vx = 0
-                    if self.vy < 0:
-                        if p.rect.bottom - 20 <= self.rect.top <= p.rect.bottom:
-                            self.rect.top = p.rect.bottom - 1
-                            self.vy = 0
-                        else:
-                            self.vx = 0
+                if self.rect.bottom - 5 > p.rect.top:
+                    if x > 0:
+                        self.rect.right = p.rect.left + 2
+                    elif x < 0:
+                        self.rect.left = p.rect.right - 1
+                    self.vx = 0
+                else:
+                    self.collide_fl = 0
+                if y > 0:
+                    if p.rect.top + 20 >= self.rect.bottom >= p.rect.top:
+                        self.rect.bottom = p.rect.top + 1
+                        self.is_on_the_floor = True
+                        self.vy = 0
+                    else:
+                        self.vx = 0
+                if y < 0:
+                    if p.rect.bottom - 20 <= self.rect.top <= p.rect.bottom:
+                        self.rect.top = p.rect.bottom - 1
+                        self.vy = 0
+                    else:
+                        self.vx = 0
     
     def change_sheet(self, new_sheet, cols, rows, num=0):
         self.sheet = new_sheet
@@ -339,7 +266,7 @@ class Camera:
     def apply(self, obj):
         obj.rect.x += self.dx
         obj.rect.y += self.dy
-    
+        
     def update(self, target):
         self.dx = -(target.rect.x + target.rect.width // 2 - WIDTH // 2)
         self.dy = -(target.rect.y + target.rect.height // 2 - HEIGHT // 2)
@@ -347,14 +274,23 @@ class Camera:
 
 # Функция для загрузки меню
 def load_menu():
-    # Добавление интерфейса меню
+    menu = load_image('Sprites/Terrain', 'menu.png')
+    button = load_image('Sprites/Terrain', 'button_pressed.png', -1)
+    screen.blit(menu, (0, 0))
     pygame.display.flip()
+    fl = 0
     while True:
         for ev in pygame.event.get():
             if ev.type == pygame.QUIT:
                 terminate()
-            elif ev.type == pygame.KEYDOWN or ev.type == pygame.MOUSEBUTTONDOWN:
-                return
+            elif ev.type == pygame.MOUSEBUTTONDOWN:
+                if 487 >= ev.pos[0] >= 312 and 357 >= ev.pos[1] >= 281:
+                    screen.blit(button, (312, 281))
+                    pygame.display.flip()
+                    fl = 1
+            elif ev.type == pygame.MOUSEBUTTONUP:
+                if fl:
+                    return
 
 
 # Функция для загрузки уровня из текстового файла
@@ -369,24 +305,29 @@ def load_level(filename):
 # Функция для загрузки заднего фона
 def load_back_ground(directory, name):
     back_ground_sprite = load_image(directory, name)
-    back_ground_surface = pygame.Surface(SIZE, pygame.SRCALPHA, 32)
+    back_ground_surface = pygame.Surface((WIDTH * 20, HEIGHT * 20), pygame.SRCALPHA, 32)
     sprite_height = back_ground_sprite.get_height()
     sprite_width = back_ground_sprite.get_width()
-    for y in range(0, (HEIGHT + sprite_height - 1) // sprite_height):
-        for x in range(0, (WIDTH + sprite_width - 1) // sprite_width):
+    for y in range(((HEIGHT + sprite_height - 1) // sprite_height) * 3):
+        for x in range(((WIDTH + sprite_width - 1) // sprite_width + 10) * 3):
             back_ground_surface.blit(back_ground_sprite, (x * sprite_width, y * sprite_height))
     return back_ground_surface
 
 
 # Создание всех объектов, главный игровой цикл и отслеживание всех событий в игре
 if __name__ == '__main__':
+    load_menu()
     running = True
+    fruits = ['apple', 'banana', 'melon', 'strawberry']
     background = load_back_ground('Sprites/Background', 'Blue.png')
-    screen.blit(background, (0, 0))
+    Background(background)
     left, right, up = False, False, False
     hero = MainCharacter((100, 100))
     for i in range(23):
-        Platform('grass', i, 300 // 48)
+        Platform('grass', i * 48, 300)
+    Platform('grass', 288, 268)
+    for i in range(23):
+        Fruit((i * 30, 200), random.choice(fruits))
     camera = Camera((hero.rect.x, hero.rect.y))
     while running:
         for event in pygame.event.get():
@@ -407,10 +348,11 @@ if __name__ == '__main__':
             if event.type == pygame.KEYUP and event.key == pygame.K_UP:
                 up = False
         pygame.display.flip()
+        screen.fill((0, 0, 0))
         camera.update(hero)
         for sprite in all_sprites:
             camera.apply(sprite)
-        screen.blit(background, (0, 0))
+        bg_group.draw(screen)
         platforms_group.draw(screen)
         fruit_group.draw(screen)
         hero_group.draw(screen)
