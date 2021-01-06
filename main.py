@@ -42,6 +42,11 @@ hero_lstanding_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'idle_lef
 hero_lrunning_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'run_left.png', -1)
 hero_lfalling_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'fall_left.png', -1)
 hero_ljumping_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'jump_left.png', -1)
+
+# Спрайты противников
+mushroom_running_right_sheet = load_image('Sprites/Enemies/Mushroom', 'Run_right.png', -1)
+mushroom_running_left_sheet = load_image('Sprites/Enemies/Mushroom', 'Run.png', -1)
+
 # Словарь картинок для фруктов
 fruit_images = {
     'apple': load_image('Sprites/Items/Fruits', 'Apple.png', -1),
@@ -62,6 +67,7 @@ platform_images = {
     'g_orange_stone': load_image('Sprites/Terrain/orange_stone', '1.png'),
     'v_orange_stone': load_image('Sprites/Terrain/orange_stone', '2.png')}
 # Создание всех груп спрайтов
+mushroom_group = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 hero_group = pygame.sprite.Group()
 fruit_group = pygame.sprite.Group()
@@ -74,6 +80,100 @@ bg_group = pygame.sprite.Group()
 def terminate():
     pygame.quit()
     exit()
+
+
+# Класс 'Грибы-Убийцы'
+class Mushroom(pygame.sprite.Sprite):
+    def __init__(self, pos):
+        super().__init__(all_sprites, mushroom_group)
+        self.frame = []
+        self.pos = pos
+        self.sheet = mushroom_running_left_sheet
+        self.cut_sheets(self.sheet, 16, 1)
+        self.cur_frame = 0
+        self.image = self.frame[self.cur_frame]
+        self.rect = self.image.get_rect()
+        self.mask = pygame.mask.from_surface(self.image)
+        self.rect.x, self.rect.y = pos
+        self.vx = 0
+        self.vy = 0
+        self.collide_fl = 0
+        self.left = True
+        self.is_on_the_floor = False
+        self.temp = 0
+        self.empty = []
+
+    def hero_collide(self, obj):
+        if pygame.sprite.collide_mask(self, obj):
+            terminate()
+
+    def cut_sheets(self, sheet, columns, rows):
+        self.frame.clear()
+        if not hasattr(self, 'rect'):
+            self.rect = pygame.Rect(self.pos[0], self.pos[1], sheet.get_width() // columns,
+                                    sheet.get_height() // rows)
+        else:
+            self.rect = pygame.Rect(self.rect.x, self.rect.y, sheet.get_width() // columns,
+                                    sheet.get_height() // rows)
+        for j in range(rows):
+            for i in range(columns):
+                frame_coords = (self.rect.w * i, self.rect.h * j)
+                self.frame.append(sheet.subsurface(pygame.Rect(frame_coords, self.rect.size)))
+
+    def update_animation(self):
+        self.cur_frame = (self.cur_frame + 1) % len(self.frame)
+        self.image = self.frame[self.cur_frame]
+
+    def run(self):
+        if self.vx == 0 and self.left:
+            self.change_sheet(mushroom_running_right_sheet, 16, 1)
+            self.left = False
+        elif self.vx == 0 and not self.left:
+            self.change_sheet(mushroom_running_left_sheet, 16, 1)
+            self.left = True
+        if self.collide_fl != 1 and self.left:
+            self.vx = -MOVE_SPEED
+        if self.collide_fl != 2 and not self.left:
+            self.vx = MOVE_SPEED
+        if not self.is_on_the_floor:
+            self.vy += GRAVITY
+        self.is_on_the_floor = False
+        self.rect.y += self.vy
+        self.collide(0, self.vy)
+        self.rect.x += self.vx
+        self.collide(self.vx, 0)
+        self.collide_fl = 0
+
+    def collide(self, x, y):
+        for p in platforms_group:
+            if pygame.sprite.collide_mask(self, p):
+                if self.rect.bottom - 5 > p.rect.top:
+                    if x > 0:
+                        self.rect.right = p.rect.left + 2
+                    elif x < 0:
+                        self.rect.left = p.rect.right - 1
+                    self.vx = 0
+                else:
+                    self.collide_fl = 0
+                if y > 0:
+                    if p.rect.top + 20 >= self.rect.bottom >= p.rect.top:
+                        self.rect.bottom = p.rect.top + 1
+                        self.is_on_the_floor = True
+                        self.vy = 0
+                    else:
+                        self.vx = 0
+                if y < 0:
+                    if p.rect.bottom - 20 <= self.rect.top <= p.rect.bottom:
+                        self.rect.top = p.rect.bottom - 1
+                        self.vy = 0
+                    else:
+                        self.vx = 0
+
+    def change_sheet(self, new_sheet, cols, rows):
+        self.sheet = new_sheet
+        self.cut_sheets(self.sheet, cols, rows)
+        self.cur_frame = 0
+        self.image = self.frame[self.cur_frame]
 
 
 # Класс фруктов
@@ -90,7 +190,7 @@ class Fruit(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.mask = pygame.mask.from_surface(self.image)
         self.rect.x, self.rect.y = pos
-    
+
     def cut_sheets(self, sheet, columns, rows):
         self.rect = pygame.Rect(self.pos[0], self.pos[1], sheet.get_width() // columns,
                                 sheet.get_height() // rows)
@@ -98,11 +198,11 @@ class Fruit(pygame.sprite.Sprite):
             for i in range(columns):
                 frame_coords = (self.rect.w * i, self.rect.h * j)
                 self.frame.append(sheet.subsurface(pygame.Rect(frame_coords, self.rect.size)))
-    
+
     def update_animation(self):
         self.cur_frame = (self.cur_frame + 1) % len(self.frame)
         self.image = self.frame[self.cur_frame]
-    
+
     def collide(self, obj):
         if pygame.sprite.collide_mask(obj, self):
             if self.name == 'apple':
@@ -155,7 +255,7 @@ class MainCharacter(pygame.sprite.Sprite):
         self.melon_counter = 0
         self.strawberry_counter = 0
         self.is_on_the_floor = False
-    
+
     def cut_sheets(self, sheet, columns, rows, num):
         self.frame.clear()
         if not hasattr(self, 'rect'):
@@ -168,11 +268,11 @@ class MainCharacter(pygame.sprite.Sprite):
             for i in range(columns):
                 frame_coords = (self.rect.w * i, self.rect.h * j)
                 self.frame.append(sheet.subsurface(pygame.Rect(frame_coords, self.rect.size)))
-    
+
     def update_animation(self):
         self.cur_frame = (self.cur_frame + 1) % len(self.frame)
         self.image = self.frame[self.cur_frame]
-    
+
     def update(self, left, right, up):
         if up:
             if self.is_on_the_floor:
@@ -213,17 +313,17 @@ class MainCharacter(pygame.sprite.Sprite):
                     self.change_sheet(hero_ljumping_sheet, 1, 1)
             elif self.vy == 0 and self.vx > 0 and self.collide_fl != 1:
                 if (self.sheet == hero_standing_sheet or self.sheet == hero_falling_sheet or
-                    self.sheet == hero_lstanding_sheet or self.sheet == hero_lfalling_sheet or
+                        self.sheet == hero_lstanding_sheet or self.sheet == hero_lfalling_sheet or
                         self.sheet == hero_lrunning_sheet):
                     self.change_sheet(hero_running_sheet, 12, 1)
             elif self.vy == 0 and self.vx < 0 and self.collide_fl != 2:
                 if (self.sheet == hero_lstanding_sheet or self.sheet == hero_lfalling_sheet or
-                    self.sheet == hero_standing_sheet or self.sheet == hero_falling_sheet or
+                        self.sheet == hero_standing_sheet or self.sheet == hero_falling_sheet or
                         self.sheet == hero_running_sheet):
                     self.change_sheet(hero_lrunning_sheet, 12, 1)
         self.collide(self.vx, 0)
         self.collide_fl = 0
-    
+
     def collide(self, x, y):
         for p in platforms_group:
             if pygame.sprite.collide_mask(self, p):
@@ -248,7 +348,7 @@ class MainCharacter(pygame.sprite.Sprite):
                         self.vy = 0
                     else:
                         self.vx = 0
-    
+
     def change_sheet(self, new_sheet, cols, rows, num=0):
         self.sheet = new_sheet
         self.cut_sheets(self.sheet, cols, rows, num)
@@ -262,11 +362,11 @@ class Camera:
         self.dx = 0
         self.dy = 0
         self.field_size = field_size
-    
+
     def apply(self, obj):
         obj.rect.x += self.dx
         obj.rect.y += self.dy
-        
+
     def update(self, target):
         self.dx = -(target.rect.x + target.rect.width // 2 - WIDTH // 2)
         self.dy = -(target.rect.y + target.rect.height // 2 - HEIGHT // 2)
@@ -322,10 +422,12 @@ if __name__ == '__main__':
     background = load_back_ground('Sprites/Background', 'Blue.png')
     Background(background)
     left, right, up = False, False, False
+    Mushroom((600, 250))
     hero = MainCharacter((100, 100))
     for i in range(23):
         Platform('grass', i * 48, 300)
-    Platform('grass', 288, 268)
+    Platform('grass', 288, 252)
+    Platform('grass', 800, 252)
     for i in range(23):
         Fruit((i * 30, 200), random.choice(fruits))
     camera = Camera((hero.rect.x, hero.rect.y))
@@ -358,6 +460,11 @@ if __name__ == '__main__':
         hero_group.draw(screen)
         hero.update(left, right, up)
         hero.update_animation()
+        mushroom_group.draw(screen)
+        for mush in mushroom_group:
+            mush.update_animation()
+            mush.run()
+            mush.hero_collide(hero)
         for fruit in fruit_group:
             fruit.update_animation()
             fruit.collide(hero)
