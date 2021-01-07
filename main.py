@@ -8,7 +8,7 @@ pygame.init()
 SIZE = WIDTH, HEIGHT = 800, 600
 FPS = 60
 MOVE_SPEED = 4
-JUMP_POWER = 9
+JUMP_POWER = 7
 GRAVITY = 0.3
 screen = pygame.display.set_mode(SIZE)
 pygame.display.set_caption("Fruit Ninja 2.0")
@@ -42,6 +42,8 @@ hero_lstanding_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'idle_lef
 hero_lrunning_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'run_left.png', -1)
 hero_lfalling_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'fall_left.png', -1)
 hero_ljumping_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'jump_left.png', -1)
+hero_d_jumping_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'Double Jump.png', -1)
+hero_d_l_jumping_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'l Double Jump.png', -1)
 # Словарь картинок для фруктов
 fruit_images = {
     'apple': load_image('Sprites/Items/Fruits', 'Apple.png', -1),
@@ -154,6 +156,8 @@ class MainCharacter(pygame.sprite.Sprite):
         self.banana_counter = 0
         self.melon_counter = 0
         self.strawberry_counter = 0
+        self.can_jump = True
+        self.can_double_jump = True
         self.is_on_the_floor = False
     
     def cut_sheets(self, sheet, columns, rows, num):
@@ -175,8 +179,7 @@ class MainCharacter(pygame.sprite.Sprite):
     
     def update(self, left, right, up):
         if up:
-            if self.is_on_the_floor:
-                self.vy = -JUMP_POWER
+            self.jump()
         if left and self.collide_fl != 1:
             self.vx = -MOVE_SPEED
         if right and self.collide_fl != 2:
@@ -186,6 +189,9 @@ class MainCharacter(pygame.sprite.Sprite):
             self.vx = 0
         if not self.is_on_the_floor:
             self.vy += GRAVITY
+        else:
+            self.can_jump = True
+            self.can_double_jump = True
         self.is_on_the_floor = False
         self.rect.y += self.vy
         self.collide(0, self.vy)
@@ -223,6 +229,14 @@ class MainCharacter(pygame.sprite.Sprite):
                     self.change_sheet(hero_lrunning_sheet, 12, 1)
         self.collide(self.vx, 0)
         self.collide_fl = 0
+    
+    def jump(self):
+        if self.can_jump:
+            self.can_jump = False
+            self.vy = -JUMP_POWER
+        elif self.can_double_jump:
+            self.can_double_jump = False
+            self.vy = -JUMP_POWER
     
     def collide(self, x, y):
         for p in platforms_group:
@@ -345,8 +359,6 @@ if __name__ == '__main__':
                 left = False
             if event.type == pygame.KEYDOWN and event.key == pygame.K_UP:
                 up = True
-            if event.type == pygame.KEYUP and event.key == pygame.K_UP:
-                up = False
         pygame.display.flip()
         screen.fill((0, 0, 0))
         camera.update(hero)
@@ -357,6 +369,7 @@ if __name__ == '__main__':
         fruit_group.draw(screen)
         hero_group.draw(screen)
         hero.update(left, right, up)
+        up = False
         hero.update_animation()
         for fruit in fruit_group:
             fruit.update_animation()
