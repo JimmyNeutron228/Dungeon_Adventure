@@ -42,8 +42,7 @@ hero_lstanding_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'idle_lef
 hero_lrunning_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'run_left.png', -1)
 hero_lfalling_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'fall_left.png', -1)
 hero_ljumping_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'jump_left.png', -1)
-hero_d_jumping_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'Double Jump.png', -1)
-hero_d_l_jumping_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'l Double Jump.png', -1)
+hitted_hero_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'hitted_hero.png', -1)
 
 # Спрайты противников
 mushroom_running_right_sheet = load_image('Sprites/Enemies/Mushroom', 'Run_right.png', -1)
@@ -68,6 +67,10 @@ platform_images = {
     'v_gray_stone': load_image('Sprites/Terrain/gray_stone', '2.png'),
     'g_orange_stone': load_image('Sprites/Terrain/orange_stone', '1.png'),
     'v_orange_stone': load_image('Sprites/Terrain/orange_stone', '2.png')}
+
+return_to_menu_white = load_image('Sprites/Menu/Buttons', 'white_menu_button.png', -1)
+return_to_menu_black = load_image('Sprites/Menu/Buttons', 'black_menu_button.png', -1)
+
 # Создание всех груп спрайтов
 mushroom_group = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
@@ -107,7 +110,7 @@ class Mushroom(pygame.sprite.Sprite):
 
     def hero_collide(self, obj):
         if pygame.sprite.collide_mask(self, obj):
-            terminate()
+            obj.game_over()
 
     def cut_sheets(self, sheet, columns, rows):
         self.frame.clear()
@@ -218,6 +221,42 @@ class Fruit(pygame.sprite.Sprite):
             self.kill()
 
 
+def game_over_menu(mode):
+    gms = game_over_sign(mode)
+    screen.blit(gms[0], (gms[1], gms[2]))
+    return_to_menu_white = load_image('Sprites/Menu/Buttons', 'white_menu_button.png', -1)
+    return_to_menu_black = load_image('Sprites/Menu/Buttons', 'black_menu_button.png', -1)
+    fl = 0
+    while True:
+        for ev in pygame.event.get():
+            if ev.type == pygame.QUIT:
+                terminate()
+            elif ev.type == pygame.MOUSEBUTTONDOWN:
+                if 487 >= ev.pos[0] >= 312 and 357 >= ev.pos[1] >= 281:
+                    screen.blit(return_to_menu_white, (312, 281))
+                    pygame.display.flip()
+                    fl = 1
+            elif ev.type == pygame.MOUSEBUTTONUP:
+                if fl:
+                    start_game()
+        
+
+
+def game_over_sign(k):
+    font = pygame.font.Font(None, 100)
+    text = font.render("GAME OVER", True, (0, 0, 0))
+    text_x = WIDTH // 2 - text.get_width() // 2
+    text_y = HEIGHT // 2 - text.get_height() // 2
+    ans1 = (text, text_x, text_y - 140)
+    if not k:
+        return ans1
+    text = font.render("GAME OVER", True, (240, 240, 240))
+    text_x = WIDTH // 2 - text.get_width() // 2
+    text_y = HEIGHT // 2 - text.get_height() // 2
+    ans2 = (text, text_x, text_y - 140)
+    return ans2
+
+
 # Класс платформ
 class Platform(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
@@ -259,6 +298,7 @@ class MainCharacter(pygame.sprite.Sprite):
         self.can_jump = True
         self.can_double_jump = True
         self.is_on_the_floor = False
+        self.death = False
     
     def cut_sheets(self, sheet, columns, rows, num):
         self.frame.clear()
@@ -278,57 +318,65 @@ class MainCharacter(pygame.sprite.Sprite):
         self.image = self.frame[self.cur_frame]
     
     def update(self, left, right, up):
-        if up:
-            self.jump()
-        if left and self.collide_fl != 1:
-            self.vx = -MOVE_SPEED
-        if right and self.collide_fl != 2:
-            self.vx = MOVE_SPEED
-        if not (left or right):
-            self.collide_fl = 0
-            self.vx = 0
+        if not self.death:
+            if up:
+                self.jump()
+            if left and self.collide_fl != 1:
+                self.vx = -MOVE_SPEED
+            if right and self.collide_fl != 2:
+                self.vx = MOVE_SPEED
+            if not (left or right):
+                self.collide_fl = 0
+                self.vx = 0
         if not self.is_on_the_floor:
             self.vy += GRAVITY
-        else:
-            self.can_jump = True
-            self.can_double_jump = True
         self.is_on_the_floor = False
         self.rect.y += self.vy
-        self.collide(0, self.vy)
+        if not self.death:
+            self.collide(0, self.vy)
         self.rect.x += self.vx
-        self.collide(self.vx, 0)
-        if self.vx == 0 and self.vy == 0:
-            if self.sheet == hero_lfalling_sheet or self.sheet == hero_lrunning_sheet:
-                self.change_sheet(hero_lstanding_sheet, 11, 1, 2)
-                self.vx = 0
-            if self.sheet == hero_falling_sheet or self.sheet == hero_running_sheet:
-                self.change_sheet(hero_standing_sheet, 11, 1, 2)
-                self.vx = 0
+        if not self.death:
+            self.collide(self.vx, 0)
+        if not self.death:
+            if self.vx == 0 and self.vy == 0:
+                if self.sheet == hero_lfalling_sheet or self.sheet == hero_lrunning_sheet:
+                    self.change_sheet(hero_lstanding_sheet, 11, 1, 2)
+                    self.vx = 0
+                if self.sheet == hero_falling_sheet or self.sheet == hero_running_sheet:
+                    self.change_sheet(hero_standing_sheet, 11, 1, 2)
+                    self.vx = 0
+            else:
+                if self.vy > 0:
+                    if self.vx > 0 or self.sheet == hero_jumping_sheet:
+                        self.change_sheet(hero_falling_sheet, 1, 1)
+                    if self.vx < 0 or self.sheet == hero_ljumping_sheet:
+                        self.change_sheet(hero_lfalling_sheet, 1, 1)
+                elif self.vy < 0:
+                    if (self.sheet == hero_running_sheet or self.sheet == hero_standing_sheet or
+                            self.vx > 0 or self.sheet == hero_falling_sheet):
+                        self.change_sheet(hero_jumping_sheet, 1, 1)
+                    if (self.sheet == hero_lrunning_sheet or self.sheet == hero_lstanding_sheet or
+                            self.vx < 0 or self.sheet == hero_lfalling_sheet):
+                        self.change_sheet(hero_ljumping_sheet, 1, 1)
+                elif self.vy == 0 and self.vx > 0 and self.collide_fl != 1:
+                    if (self.sheet == hero_standing_sheet or self.sheet == hero_falling_sheet or
+                        self.sheet == hero_lstanding_sheet or self.sheet == hero_lfalling_sheet or
+                            self.sheet == hero_lrunning_sheet):
+                        self.change_sheet(hero_running_sheet, 12, 1)
+                elif self.vy == 0 and self.vx < 0 and self.collide_fl != 2:
+                    if (self.sheet == hero_lstanding_sheet or self.sheet == hero_lfalling_sheet or
+                        self.sheet == hero_standing_sheet or self.sheet == hero_falling_sheet or
+                            self.sheet == hero_running_sheet):
+                        self.change_sheet(hero_lrunning_sheet, 12, 1)
+            self.collide(self.vx, 0)
+            self.collide_fl = 0
+            if self.is_on_the_floor:
+                self.can_jump = True
+                self.can_double_jump = True
         else:
-            if self.vy > 0:
-                if self.vx > 0 or self.sheet == hero_jumping_sheet:
-                    self.change_sheet(hero_falling_sheet, 1, 1)
-                if self.vx < 0 or self.sheet == hero_ljumping_sheet:
-                    self.change_sheet(hero_lfalling_sheet, 1, 1)
-            elif self.vy < 0:
-                if (self.sheet == hero_running_sheet or self.sheet == hero_standing_sheet or
-                        self.vx > 0):
-                    self.change_sheet(hero_jumping_sheet, 1, 1)
-                if (self.sheet == hero_lrunning_sheet or self.sheet == hero_lstanding_sheet or
-                        self.vx < 0):
-                    self.change_sheet(hero_ljumping_sheet, 1, 1)
-            elif self.vy == 0 and self.vx > 0 and self.collide_fl != 1:
-                if (self.sheet == hero_standing_sheet or self.sheet == hero_falling_sheet or
-                    self.sheet == hero_lstanding_sheet or self.sheet == hero_lfalling_sheet or
-                        self.sheet == hero_lrunning_sheet):
-                    self.change_sheet(hero_running_sheet, 12, 1)
-            elif self.vy == 0 and self.vx < 0 and self.collide_fl != 2:
-                if (self.sheet == hero_lstanding_sheet or self.sheet == hero_lfalling_sheet or
-                    self.sheet == hero_standing_sheet or self.sheet == hero_falling_sheet or
-                        self.sheet == hero_running_sheet):
-                    self.change_sheet(hero_lrunning_sheet, 12, 1)
-        self.collide(self.vx, 0)
-        self.collide_fl = 0
+            self.change_sheet(hitted_hero_sheet, 1, 1)
+        if self.rect.top > HEIGHT:
+            self.kill()
     
     def jump(self):
         if self.can_jump:
@@ -369,6 +417,11 @@ class MainCharacter(pygame.sprite.Sprite):
         self.cur_frame = 0
         self.image = self.frame[self.cur_frame]
 
+    def game_over(self):
+        self.vx = random.choice([-1, 1]) * 3
+        self.vy = -5
+        self.death = True
+
 
 # Класс камеры
 class Camera:
@@ -380,14 +433,16 @@ class Camera:
     def apply(self, obj):
         obj.rect.x += self.dx
         obj.rect.y += self.dy
-        
+            
     def update(self, target):
-        self.dx = -(target.rect.x + target.rect.width // 2 - WIDTH // 2)
-        self.dy = -(target.rect.y + target.rect.height // 2 - HEIGHT // 2)
+        if not target.death:
+            self.dx = -(target.rect.x + target.rect.width // 2 - WIDTH // 2)
+            self.dy = -(target.rect.y + target.rect.height // 2 - HEIGHT // 2)
 
 
 # Функция для загрузки меню
 def load_menu():
+    screen.fill((0, 0, 0))
     menu = load_image('Sprites/Terrain', 'menu.png')
     button = load_image('Sprites/Terrain', 'button_pressed.png', -1)
     screen.blit(menu, (0, 0))
@@ -419,7 +474,7 @@ def load_level(filename):
 # Функция для загрузки заднего фона
 def load_back_ground(directory, name):
     back_ground_sprite = load_image(directory, name)
-    back_ground_surface = pygame.Surface((WIDTH * 20, HEIGHT * 20), pygame.SRCALPHA, 32)
+    back_ground_surface = pygame.Surface((WIDTH * 10, HEIGHT * 10), pygame.SRCALPHA, 32)
     sprite_height = back_ground_sprite.get_height()
     sprite_width = back_ground_sprite.get_width()
     for y in range(((HEIGHT + sprite_height - 1) // sprite_height) * 3):
@@ -428,44 +483,46 @@ def load_back_ground(directory, name):
     return back_ground_surface
 
 
-# Создание всех объектов, главный игровой цикл и отслеживание всех событий в игре
-if __name__ == '__main__':
-    load_menu()
-    running = True
-    fruits = ['apple', 'banana', 'melon', 'strawberry']
-    background = load_back_ground('Sprites/Background', 'Blue.png')
-    Background(background)
+def game():
+    global hero, seconds_counter, mode
+    fl = 0
+    game_over = False
     left, right, up = False, False, False
-    Mushroom((600, 250))
-    hero = MainCharacter((100, 100))
-    for i in range(23):
-        Platform('grass', i * 48, 300)
-    Platform('grass', 288, 252)
-    Platform('grass', 800, 252)
-    for i in range(23):
-        Fruit((i * 30, 200), random.choice(fruits))
-    camera = Camera((hero.rect.x, hero.rect.y))
-    while running:
+    while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT:
-                    left = True
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_RIGHT:
-                    right = True
-            if event.type == pygame.KEYUP and event.key == pygame.K_RIGHT:
-                right = False
-            if event.type == pygame.KEYUP and event.key == pygame.K_LEFT:
-                left = False
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_UP:
-                up = True
+            if not game_over:
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_LEFT:
+                        left = True
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_RIGHT:
+                        right = True
+                if event.type == pygame.KEYUP and event.key == pygame.K_RIGHT:
+                    right = False
+                if event.type == pygame.KEYUP and event.key == pygame.K_LEFT:
+                    left = False
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_UP:
+                    up = True
+            else:
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if 487 >= event.pos[0] >= 312 and 357 >= event.pos[1] >= 281:
+                        screen.blit(return_to_menu_black, (312, 281))
+                        pygame.display.flip()
+                        fl = 1
+                elif event.type == pygame.MOUSEBUTTONUP:
+                    if fl:
+                        fl = 2
+                        break
+        if fl == 2:
+            break
         pygame.display.flip()
         screen.fill((0, 0, 0))
         camera.update(hero)
         for sprite in all_sprites:
-            camera.apply(sprite)
+            if not hero.death:
+                camera.apply(sprite)
         bg_group.draw(screen)
         platforms_group.draw(screen)
         fruit_group.draw(screen)
@@ -481,5 +538,49 @@ if __name__ == '__main__':
         for fruit in fruit_group:
             fruit.update_animation()
             fruit.collide(hero)
+        if hero.death or game_over:
+            game_over = True
+            gms = game_over_sign(mode)
+            screen.blit(gms[0], (gms[1], gms[2]))
+            if fl:
+                screen.blit(return_to_menu_black, (312, 281))
+            else:
+                screen.blit(return_to_menu_white, (312, 281))
+        if seconds_counter % 30 == 1:
+            mode = 1 - mode
+        seconds_counter += 1
         clock.tick(FPS)
-    pygame.quit()
+    for hero in hero_group:
+        hero.kill()
+
+
+def start_game():
+    for sprite in all_sprites:
+        sprite.kill()
+    load_menu()
+    fruits = ['apple', 'banana', 'melon', 'strawberry']
+    background = load_back_ground('Sprites/Background', 'Blue.png')
+    Background(background)
+    Mushroom((600, 250))
+    hero = MainCharacter((100, 100))
+    for i in range(23):
+        Platform('grass', i * 48, 300)
+    Platform('grass', 288, 252)
+    Platform('grass', 800, 252)
+    for i in range(23):
+        Fruit((i * 30, 200), random.choice(fruits))
+    return hero
+
+# Создание всех объектов, главный игровой цикл и отслеживание всех событий в игре
+if __name__ == '__main__':
+    hero = start_game()
+    running = True
+    left, right, up = False, False, False
+    seconds_counter = 0
+    camera = Camera((hero.rect.x, hero.rect.y))
+    mode = 0
+    while True:
+        print(hero.vx, hero.vy)
+        game()
+        hero = start_game()
+        
