@@ -54,6 +54,10 @@ fruit_images = {
     'banana': load_image('Sprites/Items/Fruits', 'Bananas.png', -1),
     'melon': load_image('Sprites/Items/Fruits', 'Melon.png', -1),
     'strawberry': load_image('Sprites/Items/Fruits', 'Strawberry.png', -1)}
+
+# Словарь картинок для ловушек
+traps_images = {
+    'spikes': load_image('Sprites/Traps/Spikes', 'Idle.png', -1)}
 # Словарь картинок для природных объектов
 platform_images = {
     'grass': load_image('Sprites/Terrain', 'grass.png'),
@@ -76,6 +80,7 @@ mushroom_group = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 hero_group = pygame.sprite.Group()
 fruit_group = pygame.sprite.Group()
+traps_group = pygame.sprite.Group()
 platforms_group = pygame.sprite.Group()
 evil_dudes_group = pygame.sprite.Group()
 bg_group = pygame.sprite.Group()
@@ -266,6 +271,20 @@ class Platform(pygame.sprite.Sprite):
         self.rect.x, self.rect.y = pos_x, pos_y
 
 
+# Класс шипов
+class Traps(pygame.sprite.Sprite):
+    def __init__(self, tile_type, pos_x, pos_y):
+        super().__init__(traps_group, all_sprites)
+        self.image = traps_images[tile_type]
+        self.rect = self.image.get_rect()
+        self.rect.x, self.rect.y = pos_x, pos_y
+
+    def hero_collide(self, obj):
+        if pygame.sprite.collide_mask(self, obj):
+            terminate()
+
+
+# Класс шипов
 class Background(pygame.sprite.Sprite):
     def __init__(self, pic):
         super().__init__(bg_group, all_sprites)
@@ -433,7 +452,7 @@ class Camera:
     def apply(self, obj):
         obj.rect.x += self.dx
         obj.rect.y += self.dy
-            
+        
     def update(self, target):
         if not target.death:
             self.dx = -(target.rect.x + target.rect.width // 2 - WIDTH // 2)
@@ -524,6 +543,7 @@ def game():
             if not hero.death:
                 camera.apply(sprite)
         bg_group.draw(screen)
+        traps_group.draw(screen)
         platforms_group.draw(screen)
         fruit_group.draw(screen)
         hero_group.draw(screen)
@@ -531,6 +551,8 @@ def game():
         up = False
         hero.update_animation()
         mushroom_group.draw(screen)
+        for h in traps_group:
+            h.hero_collide(hero)
         for mush in mushroom_group:
             mush.update_animation()
             mush.run()
@@ -550,8 +572,7 @@ def game():
             mode = 1 - mode
         seconds_counter += 1
         clock.tick(FPS)
-    for hero in hero_group:
-        hero.kill()
+    pygame.quit()
 
 
 def start_game():
