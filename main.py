@@ -2,6 +2,7 @@
 import pygame
 import os
 import random
+import time
 
 # Инициализация pygame, создание окна и определение констант
 pygame.init()
@@ -47,6 +48,9 @@ hitted_hero_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'hitted_hero
 # Спрайты противников
 mushroom_running_right_sheet = load_image('Sprites/Enemies/Mushroom', 'Run_right.png', -1)
 mushroom_running_left_sheet = load_image('Sprites/Enemies/Mushroom', 'Run.png', -1)
+plant_idle_sheet = load_image('Sprites/Enemies/Plant', 'Idle.png', -1)
+plant_attack_sheet = load_image('Sprites/Enemies/Plant', 'Attack.png', -1)
+plant_bullet_sheet = load_image('Sprites/Enemies/Plant', 'Bullet.png', -1)
 
 # Словарь картинок для фруктов
 fruit_images = {
@@ -84,6 +88,8 @@ finish_point_sheet = load_image('Sprites/Items/Checkpoints/End', 'finish.png', -
 
 # Создание всех груп спрайтов
 mushroom_group = pygame.sprite.Group()
+plant_group = pygame.sprite.Group()
+plant_bullet_group = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 hero_group = pygame.sprite.Group()
 fruit_group = pygame.sprite.Group()
@@ -99,6 +105,82 @@ finish_point_group = pygame.sprite.Group()
 def terminate():
     pygame.quit()
     exit()
+
+
+# Класс Шарик
+class Bullet(pygame.sprite.Sprite):
+    def __init__(self, pos):
+        super().__init__(all_sprites, plant_bullet_group)
+        self.pos = pos
+        self.image = plant_bullet_sheet
+        self.rect = self.image.get_rect()
+        self.mask = pygame.mask.from_surface(self.image)
+        self.rect.x, self.rect.y = pos
+
+    def collide(self):
+        for p in platforms_group:
+            if pygame.sprite.collide_mask(self, p):
+                self.kill()
+
+    def fly(self):
+        if self.rect.x == -16:
+            self.kill()
+        else:
+            self.rect.x -= 5
+
+    def hero_collide(self, obj):
+        if pygame.sprite.collide_mask(self, obj) and obj.death is False:
+            self.kill()
+            obj.death = True
+            obj.game_over()
+
+
+# Класс 'Цветы'
+class Plant(pygame.sprite.Sprite):
+    def __init__(self, pos):
+        super().__init__(all_sprites, plant_group)
+        self.pos = pos
+        self.frame = []
+        self.sheet = plant_idle_sheet
+        self.cut_sheets(self.sheet, 11, 1)
+        self.cur_frame = 0
+        self.image = self.frame[self.cur_frame]
+        self.rect = self.image.get_rect()
+        self.mask = pygame.mask.from_surface(self.image)
+        self.rect.x, self.rect.y = pos
+        self.time = time.monotonic()
+
+    def shoot(self):
+        if self.time + 3 <= time.monotonic():
+            self.time = time.monotonic()
+            poss = (self.rect.x + 5, self.rect.y + 10)
+            Bullet(poss)
+
+    def cut_sheets(self, sheet, columns, rows):
+        self.frame.clear()
+        if not hasattr(self, 'rect'):
+            self.rect = pygame.Rect(self.pos[0], self.pos[1], sheet.get_width() // columns,
+                                    sheet.get_height() // rows)
+        else:
+            self.rect = pygame.Rect(self.rect.x, self.rect.y, sheet.get_width() // columns,
+                                    sheet.get_height() // rows)
+        for j in range(rows):
+            for i in range(columns):
+                frame_coords = (self.rect.w * i, self.rect.h * j)
+                self.frame.append(sheet.subsurface(pygame.Rect(frame_coords, self.rect.size)))
+
+    def update_animation(self):
+        self.cur_frame = (self.cur_frame + 1) % len(self.frame)
+        self.image = self.frame[self.cur_frame]
+
+    def death(self, obj):
+        if pygame.sprite.collide_mask(self, obj) and self.rect.bottom >= obj.rect.top - 5:
+            self.kill()
+
+    def hero_collide(self, obj):
+        if pygame.sprite.collide_mask(self, obj) and obj.death is False:
+            obj.death = True
+            obj.game_over()
 
 
 # Класс 'Грибы-Убийцы'
@@ -121,6 +203,10 @@ class Mushroom(pygame.sprite.Sprite):
         self.is_on_the_floor = False
         self.temp = 0
         self.empty = []
+
+    def death(self, obj):
+        if pygame.sprite.collide_mask(self, obj) and self.rect.bottom >= obj.rect.top - 5:
+            self.kill()
 
     def hero_collide(self, obj):
         if pygame.sprite.collide_mask(self, obj) and obj.death is False:
@@ -649,6 +735,8 @@ def game():
         finish_point_group.draw(screen)
         fruit_group.draw(screen)
         hero_group.draw(screen)
+        plant_group.draw(screen)
+        plant_bullet_group.draw(screen)
         hero.update(left, right, up)
         up = False
         hero.update_animation()
@@ -658,10 +746,20 @@ def game():
             finish.hero_collide(hero)
         for h in traps_group:
             h.hero_collide(hero)
+        for bul in plant_bullet_group:
+            bul.fly()
+            bul.collide()
+            bul.hero_collide(hero)
+        for plant in plant_group:
+            plant.update_animation()
+            plant.death(hero)
+            plant.hero_collide(hero)
+            plant.shoot()
         for mush in mushroom_group:
             mush.update_animation()
             mush.run()
             mush.hero_collide(hero)
+            mush.death(hero)
         for fruit in fruit_group:
             fruit.update_animation()
             if not (hero.death or game_over):
@@ -707,6 +805,8 @@ def restart_level():
     background = load_back_ground('Sprites/Background', 'Blue.png')
     Background(background)
     Mushroom((600, 250))
+    Plant((1000, 258))
+    Traps('spikes', 288, 235)
     hero = MainCharacter((100, 100))
     for i in range(23):
         Platform('grass', i * 48, 300)
@@ -726,6 +826,7 @@ def start_game():
     background = load_back_ground('Sprites/Background', 'Blue.png')
     Background(background)
     Mushroom((600, 250))
+    Plant((1000, 258))
     Traps('spikes', 288, 235)
     FinishPlatform((860, 240))
     hero = MainCharacter((100, 100))
