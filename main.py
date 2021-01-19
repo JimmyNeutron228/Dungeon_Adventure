@@ -49,7 +49,6 @@ hitted_hero_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'hitted_hero
 mushroom_running_right_sheet = load_image('Sprites/Enemies/Mushroom', 'Run_right.png', -1)
 mushroom_running_left_sheet = load_image('Sprites/Enemies/Mushroom', 'Run.png', -1)
 plant_idle_sheet = load_image('Sprites/Enemies/Plant', 'Idle.png', -1)
-plant_attack_sheet = load_image('Sprites/Enemies/Plant', 'Attack.png', -1)
 plant_bullet_sheet = load_image('Sprites/Enemies/Plant', 'Bullet.png', -1)
 
 # Словарь картинок для фруктов
@@ -129,7 +128,7 @@ class Bullet(pygame.sprite.Sprite):
             self.rect.x -= 5
 
     def hero_collide(self, obj):
-        if pygame.sprite.collide_mask(self, obj) and obj.death is False:
+        if pygame.sprite.collide_mask(self, obj) and obj.death is False and obj.finish is False:
             self.kill()
             obj.death = True
             obj.game_over()
@@ -142,19 +141,21 @@ class Plant(pygame.sprite.Sprite):
         self.pos = pos
         self.frame = []
         self.sheet = plant_idle_sheet
-        self.cut_sheets(self.sheet, 11, 1)
+        self.cut_sheets(self.sheet, 1, 1)
         self.cur_frame = 0
         self.image = self.frame[self.cur_frame]
         self.rect = self.image.get_rect()
         self.mask = pygame.mask.from_surface(self.image)
         self.rect.x, self.rect.y = pos
         self.time = time.monotonic()
+        self.death = False
 
     def shoot(self):
-        if self.time + 3 <= time.monotonic():
-            self.time = time.monotonic()
-            poss = (self.rect.x + 5, self.rect.y + 10)
-            Bullet(poss)
+        if not self.death:
+            if self.time + 3 <= time.monotonic():
+                self.time = time.monotonic()
+                poss = (self.rect.x + 5, self.rect.y + 10)
+                Bullet(poss)
 
     def cut_sheets(self, sheet, columns, rows):
         self.frame.clear()
@@ -173,7 +174,7 @@ class Plant(pygame.sprite.Sprite):
         self.cur_frame = (self.cur_frame + 1) % len(self.frame)
         self.image = self.frame[self.cur_frame]
 
-    def death(self, obj):
+    def is_death(self, obj):
         if pygame.sprite.collide_mask(self, obj) and self.rect.bottom >= obj.rect.top - 5:
             self.kill()
 
@@ -203,33 +204,34 @@ class Mushroom(pygame.sprite.Sprite):
         self.is_on_the_floor = False
         self.temp = 0
         self.empty = []
-
-    def death(self, obj):
-        if pygame.sprite.collide_mask(self, obj) and self.rect.bottom >= obj.rect.top - 5:
+    
+    def is_death(self, obj):
+        if (pygame.sprite.collide_mask(self, obj) and self.rect.bottom >= obj.rect.top - 20 and
+                obj.death is False):
             self.kill()
-
+    
     def hero_collide(self, obj):
         if pygame.sprite.collide_mask(self, obj) and obj.death is False:
             obj.death = True
             obj.game_over()
-
+    
     def cut_sheets(self, sheet, columns, rows):
         self.frame.clear()
         if not hasattr(self, 'rect'):
             self.rect = pygame.Rect(self.pos[0], self.pos[1], sheet.get_width() // columns,
-                                    sheet.get_height() // rows)
+                                                              sheet.get_height() // rows)
         else:
             self.rect = pygame.Rect(self.rect.x, self.rect.y, sheet.get_width() // columns,
-                                    sheet.get_height() // rows)
+                                                              sheet.get_height() // rows)
         for j in range(rows):
             for i in range(columns):
                 frame_coords = (self.rect.w * i, self.rect.h * j)
                 self.frame.append(sheet.subsurface(pygame.Rect(frame_coords, self.rect.size)))
-
+    
     def update_animation(self):
         self.cur_frame = (self.cur_frame + 1) % len(self.frame)
         self.image = self.frame[self.cur_frame]
-
+    
     def run(self):
         if self.vx == 0 and self.left:
             self.change_sheet(mushroom_running_right_sheet, 16, 1)
@@ -249,7 +251,7 @@ class Mushroom(pygame.sprite.Sprite):
         self.rect.x += self.vx
         self.collide(self.vx, 0)
         self.collide_fl = 0
-
+    
     def collide(self, x, y):
         for p in platforms_group:
             if pygame.sprite.collide_mask(self, p):
@@ -273,13 +275,14 @@ class Mushroom(pygame.sprite.Sprite):
                         self.rect.top = p.rect.bottom - 1
                         self.vy = 0
                     else:
-                        self.vx = 0
-
+                        pass
+    
     def change_sheet(self, new_sheet, cols, rows):
         self.sheet = new_sheet
         self.cut_sheets(self.sheet, cols, rows)
         self.cur_frame = 0
         self.image = self.frame[self.cur_frame]
+        self.vx = 0
 
 
 # Класс фруктов
@@ -370,7 +373,7 @@ class Traps(pygame.sprite.Sprite):
         self.rect.x, self.rect.y = pos_x, pos_y
 
     def hero_collide(self, obj):
-        if pygame.sprite.collide_mask(self, obj):
+        if pygame.sprite.collide_mask(self, obj) and obj.death is False:
             obj.game_over()
 
 
@@ -577,7 +580,7 @@ class FinishPlatform(pygame.sprite.Sprite):
         self.image = self.frame[self.cur_frame]
     
     def hero_collide(self, obj):
-        if pygame.sprite.collide_mask(self, obj):
+        if pygame.sprite.collide_mask(self, obj) and not hero.death:
             hero.finish = True
         
         
@@ -672,7 +675,7 @@ def game():
                     left = False
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_UP:
                     up = True
-            else:
+            elif game_over and not hero.finish:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if hero.death or game_over:
                         if 487 - 60 >= event.pos[0] >= 312 - 60 and 457 >= event.pos[1] >= 381:
@@ -703,16 +706,46 @@ def game():
                     if return_fl:
                         return_fl = 2
                         break
-                if hero.finish:
-                    if event.type == pygame.MOUSEBUTTONDOWN:
-                        if 489 + 120 >= event.pos[0] >= 420 + 60 and 457 >= event.pos[1] >= 381:
-                            screen.blit(black_next_level, (480, 381))
+            elif hero.finish and not game_over:
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if 489 + 120 >= event.pos[0] >= 420 + 60 and 457 >= event.pos[1] >= 381:
+                        screen.blit(black_next_level, (480, 381))
+                        pygame.display.flip()
+                        next_lvl_fl = 1
+                elif event.type == pygame.MOUSEBUTTONUP:
+                    if next_lvl_fl:
+                        next_lvl_fl = 2
+                        break
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if hero.death or game_over:
+                        if 487 - 60 >= event.pos[0] >= 312 - 60 and 457 >= event.pos[1] >= 381:
+                            screen.blit(return_to_menu_black, (312 - 60, 381))
                             pygame.display.flip()
-                            next_lvl_fl = 1
-                    elif event.type == pygame.MOUSEBUTTONUP:
-                        if next_lvl_fl:
-                            next_lvl_fl = 2
-                            break
+                            menu_fl = 1
+                    else:
+                        if 487 - 90 >= event.pos[0] >= 312 - 90 and 457 >= event.pos[1] >= 381:
+                            screen.blit(return_to_menu_black, (312 - 90, 381))
+                            pygame.display.flip()
+                            menu_fl = 1
+                elif event.type == pygame.MOUSEBUTTONUP:
+                    if menu_fl:
+                        menu_fl = 2
+                        break
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if hero.death or game_over:
+                        if 489 + 10 >= event.pos[0] >= 420 + 10 and 454 >= event.pos[1] >= 381:
+                            screen.blit(return_to_play_black, (430, 381))
+                            pygame.display.flip()
+                            return_fl = 1
+                    else:
+                        if 489 - 30 >= event.pos[0] >= 420 - 30 and 454 >= event.pos[1] >= 381:
+                            screen.blit(return_to_play_black, (390, 381))
+                            pygame.display.flip()
+                            return_fl = 1
+                elif event.type == pygame.MOUSEBUTTONUP:
+                    if return_fl:
+                        return_fl = 2
+                        break
                 
         if menu_fl == 2:
             answer = 'menu'
@@ -751,20 +784,22 @@ def game():
             bul.collide()
             bul.hero_collide(hero)
         for plant in plant_group:
+            plant.is_death(hero)
+        for plant in plant_group:
             plant.update_animation()
-            plant.death(hero)
             plant.hero_collide(hero)
             plant.shoot()
+        for mush in mushroom_group:
+            mush.is_death(hero)
         for mush in mushroom_group:
             mush.update_animation()
             mush.run()
             mush.hero_collide(hero)
-            mush.death(hero)
         for fruit in fruit_group:
             fruit.update_animation()
             if not (hero.death or game_over):
                 fruit.collide(hero)
-        if hero.death or game_over:
+        if (hero.death or game_over) and not hero.finish:
             game_over = True
             gms = game_over_sign(mode)
             screen.blit(gms[0], (gms[1], gms[2]))
@@ -776,7 +811,7 @@ def game():
                 screen.blit(return_to_play_black, (430, 381))
             else:
                 screen.blit(return_to_play_white, (430, 381))
-        if hero.finish:
+        elif hero.finish and not (hero.death or game_over):
             greeting_sign = some_finish_word(word, mode)
             screen.blit(greeting_sign[0], (greeting_sign[1], greeting_sign[2]))
             if menu_fl:
