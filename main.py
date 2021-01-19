@@ -147,13 +147,14 @@ class Plant(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.mask = pygame.mask.from_surface(self.image)
         self.rect.x, self.rect.y = pos
-        self.time = time.monotonic()
+        self.shoot_time = time.monotonic()
         self.death = False
+        self.up_anim_time = time.monotonic()
 
     def shoot(self):
         if not self.death:
-            if self.time + 3 <= time.monotonic():
-                self.time = time.monotonic()
+            if self.shoot_time + 3 <= time.monotonic():
+                self.shoot_time = time.monotonic()
                 poss = (self.rect.x + 5, self.rect.y + 10)
                 Bullet(poss)
 
@@ -171,8 +172,10 @@ class Plant(pygame.sprite.Sprite):
                 self.frame.append(sheet.subsurface(pygame.Rect(frame_coords, self.rect.size)))
 
     def update_animation(self):
-        self.cur_frame = (self.cur_frame + 1) % len(self.frame)
-        self.image = self.frame[self.cur_frame]
+        if self.up_anim_time + 0.03 <= time.monotonic():
+            self.up_anim_time = time.monotonic()
+            self.cur_frame = (self.cur_frame + 1) % len(self.frame)
+            self.image = self.frame[self.cur_frame]
 
     def is_death(self, obj):
         if pygame.sprite.collide_mask(self, obj) and self.rect.bottom >= obj.rect.top - 5:
@@ -204,6 +207,8 @@ class Mushroom(pygame.sprite.Sprite):
         self.is_on_the_floor = False
         self.temp = 0
         self.empty = []
+        self.up_anim_time = time.monotonic()
+        
     
     def is_death(self, obj):
         if (pygame.sprite.collide_mask(self, obj) and self.rect.bottom >= obj.rect.top - 20 and
@@ -229,8 +234,10 @@ class Mushroom(pygame.sprite.Sprite):
                 self.frame.append(sheet.subsurface(pygame.Rect(frame_coords, self.rect.size)))
     
     def update_animation(self):
-        self.cur_frame = (self.cur_frame + 1) % len(self.frame)
-        self.image = self.frame[self.cur_frame]
+        if self.up_anim_time + 0.03 <= time.monotonic():
+            self.up_anim_time = time.monotonic()
+            self.cur_frame = (self.cur_frame + 1) % len(self.frame)
+            self.image = self.frame[self.cur_frame]
     
     def run(self):
         if self.vx == 0 and self.left:
@@ -299,6 +306,7 @@ class Fruit(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.mask = pygame.mask.from_surface(self.image)
         self.rect.x, self.rect.y = pos
+        self.up_anim_time = time.monotonic()
     
     def cut_sheets(self, sheet, columns, rows):
         self.rect = pygame.Rect(self.pos[0], self.pos[1], sheet.get_width() // columns,
@@ -309,8 +317,10 @@ class Fruit(pygame.sprite.Sprite):
                 self.frame.append(sheet.subsurface(pygame.Rect(frame_coords, self.rect.size)))
     
     def update_animation(self):
-        self.cur_frame = (self.cur_frame + 1) % len(self.frame)
-        self.image = self.frame[self.cur_frame]
+        if self.up_anim_time + 0.03 <= time.monotonic():
+            self.up_anim_time = time.monotonic()
+            self.cur_frame = (self.cur_frame + 1) % len(self.frame)
+            self.image = self.frame[self.cur_frame]
     
     def collide(self, obj):
         if pygame.sprite.collide_mask(obj, self):
@@ -413,6 +423,7 @@ class MainCharacter(pygame.sprite.Sprite):
         self.is_on_the_floor = False
         self.death = False
         self.finish = False
+        self.up_anim_time = time.monotonic()
     
     def cut_sheets(self, sheet, columns, rows, num):
         self.frame.clear()
@@ -428,8 +439,10 @@ class MainCharacter(pygame.sprite.Sprite):
                 self.frame.append(sheet.subsurface(pygame.Rect(frame_coords, self.rect.size)))
     
     def update_animation(self):
-        self.cur_frame = (self.cur_frame + 1) % len(self.frame)
-        self.image = self.frame[self.cur_frame]
+        if self.up_anim_time + 0.03 <= time.monotonic():
+            self.up_anim_time = time.monotonic()
+            self.cur_frame = (self.cur_frame + 1) % len(self.frame)
+            self.image = self.frame[self.cur_frame]
     
     def update(self, left, right, up):
         if not self.death and not self.finish:
@@ -555,6 +568,7 @@ class FinishPlatform(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.mask = pygame.mask.from_surface(self.image)
         self.rect.x, self.rect.y = pos
+        self.up_anim_time = time.monotonic()
     
     def cut_sheets(self, sheet, columns, rows, num):
         self.frame.clear()
@@ -570,8 +584,10 @@ class FinishPlatform(pygame.sprite.Sprite):
                 self.frame.append(sheet.subsurface(pygame.Rect(frame_coords, self.rect.size)))
     
     def update_animation(self):
-        self.cur_frame = (self.cur_frame + 1) % len(self.frame)
-        self.image = self.frame[self.cur_frame]
+        if self.up_anim_time + 0.03 <= time.monotonic():
+            self.up_anim_time = time.monotonic()
+            self.cur_frame = (self.cur_frame + 1) % len(self.frame)
+            self.image = self.frame[self.cur_frame]
     
     def change_sheet(self, new_sheet, cols, rows, num=0):
         self.sheet = new_sheet
