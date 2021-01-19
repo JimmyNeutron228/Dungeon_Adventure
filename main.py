@@ -48,7 +48,8 @@ hitted_hero_sheet = load_image('Sprites/MainCharacters/Ninja Frog', 'hitted_hero
 # Спрайты противников
 mushroom_running_right_sheet = load_image('Sprites/Enemies/Mushroom', 'Run_right.png', -1)
 mushroom_running_left_sheet = load_image('Sprites/Enemies/Mushroom', 'Run.png', -1)
-plant_idle_sheet = load_image('Sprites/Enemies/Plant', 'Idle.png', -1)
+plant_idle_left_sheet = load_image('Sprites/Enemies/Plant', 'Idle_left.png', -1)
+plant_idle_right_sheet = load_image('Sprites/Enemies/Plant', 'Idle_right.png', -1)
 plant_bullet_sheet = load_image('Sprites/Enemies/Plant', 'Bullet.png', -1)
 
 # Словарь картинок для фруктов
@@ -108,8 +109,9 @@ def terminate():
 
 # Класс Шарик
 class Bullet(pygame.sprite.Sprite):
-    def __init__(self, pos):
+    def __init__(self, pos, direction):
         super().__init__(all_sprites, plant_bullet_group)
+        self.direction = direction
         self.pos = pos
         self.image = plant_bullet_sheet
         self.rect = self.image.get_rect()
@@ -122,10 +124,12 @@ class Bullet(pygame.sprite.Sprite):
                 self.kill()
 
     def fly(self):
-        if self.rect.x == -16:
+        if self.rect.x == -16 or self.rect.x == 816:
             self.kill()
-        else:
+        elif self.direction == 'left':
             self.rect.x -= 5
+        elif self.direction == 'right':
+            self.rect.x += 5
 
     def hero_collide(self, obj):
         if pygame.sprite.collide_mask(self, obj) and obj.death is False and obj.finish is False:
@@ -136,12 +140,16 @@ class Bullet(pygame.sprite.Sprite):
 
 # Класс 'Цветы'
 class Plant(pygame.sprite.Sprite):
-    def __init__(self, pos):
+    def __init__(self, pos, direction='left'):
         super().__init__(all_sprites, plant_group)
         self.pos = pos
+        self.direction = direction
         self.frame = []
-        self.sheet = plant_idle_sheet
-        self.cut_sheets(self.sheet, 1, 1)
+        if self.direction == 'right':
+            self.sheet = plant_idle_right_sheet
+        else:
+            self.sheet = plant_idle_left_sheet
+        self.cut_sheets(self.sheet, 11, 1)
         self.cur_frame = 0
         self.image = self.frame[self.cur_frame]
         self.rect = self.image.get_rect()
@@ -155,8 +163,11 @@ class Plant(pygame.sprite.Sprite):
         if not self.death:
             if self.shoot_time + 3 <= time.monotonic():
                 self.shoot_time = time.monotonic()
-                poss = (self.rect.x + 5, self.rect.y + 10)
-                Bullet(poss)
+                if self.direction == 'left':
+                    poss = (self.rect.x + 5, self.rect.y + 10)
+                else:
+                    poss = (self.rect.x + self.rect.w - 20, self.rect.y + 10)
+                Bullet(poss, self.direction)
 
     def cut_sheets(self, sheet, columns, rows):
         self.frame.clear()
@@ -856,7 +867,7 @@ def restart_level():
     background = load_back_ground('Sprites/Background', 'Blue.png')
     Background(background)
     Mushroom((600, 250))
-    Plant((1000, 258))
+    Plant((1000, 258), 'right')
     Traps('spikes', 288, 235)
     hero = MainCharacter((100, 100))
     for i in range(23):
@@ -877,7 +888,7 @@ def start_game():
     background = load_back_ground('Sprites/Background', 'Blue.png')
     Background(background)
     Mushroom((600, 250))
-    Plant((1000, 258))
+    Plant((1000, 258), 'left')
     Traps('spikes', 288, 235)
     FinishPlatform((860, 240))
     hero = MainCharacter((100, 100))
