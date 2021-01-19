@@ -158,6 +158,14 @@ class Plant(pygame.sprite.Sprite):
         self.shoot_time = time.monotonic()
         self.death = False
         self.up_anim_time = time.monotonic()
+        self.vx = 0
+        self.vy = 0
+        
+    def run(self):
+        if self.death:
+            self.rect.x += self.vx
+            self.rect.y += self.vy
+            self.vy += GRAVITY
 
     def shoot(self):
         if not self.death:
@@ -183,17 +191,21 @@ class Plant(pygame.sprite.Sprite):
                 self.frame.append(sheet.subsurface(pygame.Rect(frame_coords, self.rect.size)))
 
     def update_animation(self):
-        if self.up_anim_time + 0.03 <= time.monotonic():
-            self.up_anim_time = time.monotonic()
-            self.cur_frame = (self.cur_frame + 1) % len(self.frame)
-            self.image = self.frame[self.cur_frame]
+        if not self.death:
+            if self.up_anim_time + 0.03 <= time.monotonic():
+                self.up_anim_time = time.monotonic()
+                self.cur_frame = (self.cur_frame + 1) % len(self.frame)
+                self.image = self.frame[self.cur_frame]
 
     def is_death(self, obj):
-        if pygame.sprite.collide_mask(self, obj) and self.rect.bottom >= obj.rect.top - 5:
-            self.kill()
+        if (pygame.sprite.collide_mask(self, obj) and self.rect.bottom >= obj.rect.top - 5
+                and self.death is False and obj.death is False):
+            self.vx = random.choice([-1, 1]) * 3
+            self.vy = -5
+            self.death = True
 
     def hero_collide(self, obj):
-        if pygame.sprite.collide_mask(self, obj) and obj.death is False:
+        if pygame.sprite.collide_mask(self, obj) and obj.death is False and self.death is False:
             obj.death = True
             obj.game_over()
 
@@ -218,17 +230,18 @@ class Mushroom(pygame.sprite.Sprite):
         self.is_on_the_floor = False
         self.temp = 0
         self.empty = []
+        self.death = False
         self.up_anim_time = time.monotonic()
         
-    
     def is_death(self, obj):
         if (pygame.sprite.collide_mask(self, obj) and self.rect.bottom >= obj.rect.top - 20 and
-                obj.death is False):
-            self.kill()
+                obj.death is False and self.death is False):
+            self.vx = random.choice([-1, 1]) * 3
+            self.vy = -5
+            self.death = True
     
     def hero_collide(self, obj):
-        if pygame.sprite.collide_mask(self, obj) and obj.death is False:
-            obj.death = True
+        if pygame.sprite.collide_mask(self, obj) and self.death is False:
             obj.game_over()
     
     def cut_sheets(self, sheet, columns, rows):
@@ -245,29 +258,35 @@ class Mushroom(pygame.sprite.Sprite):
                 self.frame.append(sheet.subsurface(pygame.Rect(frame_coords, self.rect.size)))
     
     def update_animation(self):
-        if self.up_anim_time + 0.03 <= time.monotonic():
-            self.up_anim_time = time.monotonic()
-            self.cur_frame = (self.cur_frame + 1) % len(self.frame)
-            self.image = self.frame[self.cur_frame]
+        if not self.death:
+            if self.up_anim_time + 0.03 <= time.monotonic():
+                self.up_anim_time = time.monotonic()
+                self.cur_frame = (self.cur_frame + 1) % len(self.frame)
+                self.image = self.frame[self.cur_frame]
     
     def run(self):
-        if self.vx == 0 and self.left:
-            self.change_sheet(mushroom_running_right_sheet, 16, 1)
-            self.left = False
-        elif self.vx == 0 and not self.left:
-            self.change_sheet(mushroom_running_left_sheet, 16, 1)
-            self.left = True
-        if self.collide_fl != 1 and self.left:
-            self.vx = -MOVE_SPEED
-        if self.collide_fl != 2 and not self.left:
-            self.vx = MOVE_SPEED
+        if not self.death:
+            if self.vx == 0 and self.left:
+                self.change_sheet(mushroom_running_right_sheet, 16, 1)
+                self.left = False
+            elif self.vx == 0 and not self.left:
+                self.change_sheet(mushroom_running_left_sheet, 16, 1)
+                self.left = True
+            if self.collide_fl != 1 and self.left:
+                self.vx = -MOVE_SPEED
+            if self.collide_fl != 2 and not self.left:
+                self.vx = MOVE_SPEED
+        elif self.rect.y > HEIGHT:
+            self.kill()
         if not self.is_on_the_floor:
             self.vy += GRAVITY
         self.is_on_the_floor = False
         self.rect.y += self.vy
-        self.collide(0, self.vy)
+        if not self.death:
+            self.collide(0, self.vy)
         self.rect.x += self.vx
-        self.collide(self.vx, 0)
+        if not self.death:
+            self.collide(self.vx, 0)
         self.collide_fl = 0
     
     def collide(self, x, y):
@@ -562,9 +581,10 @@ class MainCharacter(pygame.sprite.Sprite):
         self.image = self.frame[self.cur_frame]
 
     def game_over(self):
-        self.vx = random.choice([-1, 1]) * 3
-        self.vy = -5
-        self.death = True
+        if self.death is False:
+            self.vx = random.choice([-1, 1]) * 3
+            self.vy = -5
+            self.death = True
 
 
 class FinishPlatform(pygame.sprite.Sprite):
@@ -816,6 +836,7 @@ def game():
             plant.update_animation()
             plant.hero_collide(hero)
             plant.shoot()
+            plant.run()
         for mush in mushroom_group:
             mush.is_death(hero)
         for mush in mushroom_group:
