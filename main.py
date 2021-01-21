@@ -198,11 +198,12 @@ class Plant(pygame.sprite.Sprite):
                 self.image = self.frame[self.cur_frame]
 
     def is_death(self, obj):
-        if (pygame.sprite.collide_mask(self, obj) and self.rect.bottom >= obj.rect.top - 5
-                and self.death is False and obj.death is False):
+        if (pygame.sprite.collide_mask(self, obj) and self.rect.top + 20 >= obj.rect.bottom >=
+                self.rect.top and self.death is False and obj.death is False):
             self.vx = random.choice([-1, 1]) * 3
             self.vy = -5
             self.death = True
+            obj.vy = -3
 
     def hero_collide(self, obj):
         if pygame.sprite.collide_mask(self, obj) and obj.death is False and self.death is False:
@@ -234,11 +235,12 @@ class Mushroom(pygame.sprite.Sprite):
         self.up_anim_time = time.monotonic()
         
     def is_death(self, obj):
-        if (pygame.sprite.collide_mask(self, obj) and self.rect.bottom >= obj.rect.top - 20 and
-                obj.death is False and self.death is False):
+        if (pygame.sprite.collide_mask(self, obj) and self.rect.top + 20 >= obj.rect.bottom >=
+                self.rect.top and obj.death is False and self.death is False):
             self.vx = random.choice([-1, 1]) * 3
             self.vy = -5
             self.death = True
+            obj.vy = -3
     
     def hero_collide(self, obj):
         if pygame.sprite.collide_mask(self, obj) and self.death is False:
@@ -248,10 +250,10 @@ class Mushroom(pygame.sprite.Sprite):
         self.frame.clear()
         if not hasattr(self, 'rect'):
             self.rect = pygame.Rect(self.pos[0], self.pos[1], sheet.get_width() // columns,
-                                                              sheet.get_height() // rows)
+                                    sheet.get_height() // rows)
         else:
             self.rect = pygame.Rect(self.rect.x, self.rect.y, sheet.get_width() // columns,
-                                                              sheet.get_height() // rows)
+                                    sheet.get_height() // rows)
         for j in range(rows):
             for i in range(columns):
                 frame_coords = (self.rect.w * i, self.rect.h * j)
