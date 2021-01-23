@@ -1,0 +1,55 @@
+grass <x> <y> - поставить платформу на точку (x, y)
+grass <x> <y> <count> <hor> - поставить горизонтальную линию платформ с точки (x, y) длинною в count платформ вправо
+grass <x> <y> <count> <vert> - поставить вертикальную линию платформ с точки (x, y) длинною в count платформ вправо
+
+Различные платформы:
+(grass
+ black_grass
+ white_grass
+ g_brown_stone
+ v_brown_stone
+ g_gold_stone
+ v_gold_stone
+ g_gray_stone
+ v_gray_stone
+ g_orange_stone
+ v_orange_stone)
+
+apple <x> <y> <count> - поставить горизонтальную линию фруктов с точки (x, y) длинною в count фруктов вправо
+
+Различные фрукты:
+(apple
+ melon
+ strawberry
+ banana)
+
+background <color> - установить фон цвета color
+
+Цвета:
+(blue
+ brown
+ gray
+ green
+ pink
+ purple
+ yellow)
+
+finish <x> <y> - поставить финишную платформу в точку (x, y)
+
+spikes <x> <y> <count> - поставить горизонтальную линию шипов с точки (x, y) длинною в count шипов вправо
+
+spikes <x> <y> <count> <invisible> - поставить горизонтальную линию невидимых шипов если <invisible> = 1 с точки (x, y) длинною в count шипов вправо
+
+saw <x> <y> <count> - поставить горизонтальную линию пил с точки (x, y) длинною в count пил вправо
+
+mush <x> <y> - поставить гриб в точку (x, y)
+
+plant <x> <y> <dir> - поставить цветок в точку (x, y) направленного в сторону dir
+
+Направления: 
+(left
+ right)
+
+hero <x> <y> - поставить героя в точку (x, y)
+
+print <x> <y> <string> <size> - вывести на экран строку в точку (x, y) размером size 

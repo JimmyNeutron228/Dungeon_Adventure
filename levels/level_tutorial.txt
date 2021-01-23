@@ -1,12 +1,12 @@
-background blue
-mush 600 250
-plant 1000 258 left
-trap 288 235
-finish 860 240
-hero 100 100
-grass 0 300 23 hor
-white_grass 48 0 23 ver
-grass 288 252
-grass 800 252
-banana 0 200 23
-print 100 100 40 tutorial
+background green
+white_grass 0 500 20 hor
+v_brown_stone 300 452
+v_brown_stone 450 404 2 ver
+v_brown_stone 600 164 6 ver
+v_brown_stone 728 164 1 ver
+v_brown_stone 728 260 5 ver
+g_brown_stone 600 164 3 hor
+g_brown_stone 696 450
+g_brown_stone 600 350
+g_brown_stone 696 250
+hero 50 450

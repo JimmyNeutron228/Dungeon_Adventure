@@ -19,7 +19,6 @@ pygame.mixer.music.load('music.mp3')
 
 
 # Загрузка картинки
-
 def load_image(directory, name, color_key=None):
     fullname = os.path.join(directory, name)
     try:
@@ -63,7 +62,9 @@ fruit_images = {
 
 # Словарь картинок для ловушек
 traps_images = {
-    'spikes': load_image('Sprites/Traps/Spikes', 'Idle.png', -1)}
+    'spikes': load_image('Sprites/Traps/Spikes', 'Idle.png', -1),
+    'saw': load_image('Sprites/Traps/Saw', 'idle.png', -1)}
+
 # Словарь картинок для природных объектов
 platform_images = {
     'grass': load_image('Sprites/Terrain', 'grass.png'),
@@ -104,6 +105,7 @@ all_sprites = pygame.sprite.Group()
 hero_group = pygame.sprite.Group()
 fruit_group = pygame.sprite.Group()
 traps_group = pygame.sprite.Group()
+traps_invisible_group = pygame.sprite.Group()
 platforms_group = pygame.sprite.Group()
 evil_dudes_group = pygame.sprite.Group()
 bg_group = pygame.sprite.Group()
@@ -423,24 +425,55 @@ class Platform(pygame.sprite.Sprite):
 
 # Класс шипов
 class Traps(pygame.sprite.Sprite):
-    def __init__(self, tile_type, pos):
-        super().__init__(traps_group, all_sprites)
-        self.image = traps_images[tile_type]
+    def __init__(self, tile_type, pos, inv=0):
+        if inv  == 0:
+            super().__init__(traps_group, all_sprites)
+        else:
+            super().__init__(traps_invisible_group, all_sprites)
+        self.frame = []
+        self.pos = pos
+        self.cur_frame = 0
+        if tile_type == 'saw':
+            self.cut_sheets(traps_images[tile_type], 8, 1)
+        elif tile_type == 'spikes':
+            self.cut_sheets(traps_images[tile_type], 1, 1)
+        self.image = self.frame[self.cur_frame]
         self.rect = self.image.get_rect()
         self.rect.x, self.rect.y = pos
+        self.mask = pygame.mask.from_surface(self.image)
+        self.up_anim_time = time.monotonic()
 
     def hero_collide(self, obj):
         if pygame.sprite.collide_mask(self, obj) and obj.death is False:
             obj.game_over()
 
+    def update_animation(self):
+        if self.up_anim_time + 0.03 <= time.monotonic():
+            self.up_anim_time = time.monotonic()
+            self.cur_frame = (self.cur_frame + 1) % len(self.frame)
+            self.image = self.frame[self.cur_frame]
 
-# Класс шипов
+    def cut_sheets(self, sheet, columns, rows):
+        self.frame.clear()
+        if not hasattr(self, 'rect'):
+            self.rect = pygame.Rect(self.pos[0], self.pos[1], sheet.get_width() // columns,
+                                    sheet.get_height() // rows)
+        else:
+            self.rect = pygame.Rect(self.rect.x, self.rect.y, sheet.get_width() // columns,
+                                    sheet.get_height() // rows)
+        for j in range(rows):
+            for i in range(columns):
+                frame_coords = (self.rect.w * i, self.rect.h * j)
+                self.frame.append(sheet.subsurface(pygame.Rect(frame_coords, self.rect.size)))
+
+
+# Класс заднего фона
 class Background(pygame.sprite.Sprite):
     def __init__(self, pic):
         super().__init__(bg_group, all_sprites)
         self.image = pic
         self.rect = self.image.get_rect()
-        self.rect.x = -300
+        self.rect.x = -2000
         self.rect.y = -600
 
 
@@ -711,8 +744,21 @@ def exec_strings_from_level(string):
         Background(bg_sheet)
     elif string[0] == 'finish':
         FinishPlatform((int(string[1]), int(string[2])))
-    elif string[0] == 'trap':
-        Traps('spikes', (int(string[1]), int(string[2])))
+    elif string[0] == 'spikes':
+        if len(string) > 4:
+            Traps('spikes', (int(string[1]), int(string[2])), int(string[4]))
+            for i in range(int(string[3])):
+                Traps(string[0], (int(string[1]) + 16 * i, int(string[2])), int(string[4]))
+        else:
+            Traps('spikes', (int(string[1]), int(string[2])))
+            if len(string) > 3:
+                for i in range(int(string[3])):
+                    Traps(string[0], (int(string[1]) + 16 * i, int(string[2])))
+    elif string[0] == 'saw':
+        Traps('saw', (int(string[1]), int(string[2])))
+        if len(string) > 3:
+            for i in range(int(string[3])):
+                Traps(string[0], (int(string[1]) + 38 * i, int(string[2])))
     elif string[0] == 'mush':
         Mushroom((int(string[1]), int(string[2])))
     elif string[0] == 'plant':
@@ -748,8 +794,8 @@ def load_back_ground(dirname):
     back_ground_surface = pygame.Surface((WIDTH * 10, HEIGHT * 10), pygame.SRCALPHA, 32)
     sprite_height = dirname.get_height()
     sprite_width = dirname.get_width()
-    for y in range(((HEIGHT + sprite_height - 1) // sprite_height) * 3):
-        for x in range(((WIDTH + sprite_width - 1) // sprite_width + 10) * 3):
+    for y in range(((HEIGHT + sprite_height - 1) // sprite_height) * 15):
+        for x in range(((WIDTH + sprite_width - 1) // sprite_width + 10) * 30):
             back_ground_surface.blit(dirname, (x * sprite_width, y * sprite_height))
     return back_ground_surface
 
@@ -889,6 +935,10 @@ def game():
             finish.hero_collide(hero)
         for h in traps_group:
             h.hero_collide(hero)
+            h.update_animation()
+        for h in traps_invisible_group:
+            h.hero_collide(hero)
+            h.update_animation()
         for bul in plant_bullet_group:
             bul.fly()
             bul.collide()
@@ -971,7 +1021,7 @@ def start_game():
 
 # Создание всех объектов, главный игровой цикл и отслеживание всех событий в игре
 if __name__ == '__main__':
-    level = 1
+    level = 'tutorial'
     hero = start_game()
     while True:
         answer = game()
