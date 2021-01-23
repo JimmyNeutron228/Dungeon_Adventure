@@ -1,7 +1,7 @@
 background green
 white_grass 0 500 20 hor
 v_brown_stone 300 452
-v_brown_stone 450 404 2 ver
+v_brown_stone 450 354 3 ver
 v_brown_stone 600 164 6 ver
 v_brown_stone 728 164 1 ver
 v_brown_stone 728 260 5 ver
@@ -10,3 +10,6 @@ g_brown_stone 696 450
 g_brown_stone 600 350
 g_brown_stone 696 250
 hero 50 450
+print 100 100 30 Нажимайте стрелочки влево вправо чтобы герой двигался
+print 100 130 30 Нажмите стрелочку вверх чтобы подпрыгнуть
+print 100 160 30 Нажмите стрелочку вверх два раза чтобы сделать двойной прыжок

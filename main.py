@@ -569,7 +569,7 @@ class MainCharacter(pygame.sprite.Sprite):
                         self.change_sheet(hero_ljumping_sheet, 1, 1)
                 elif self.vy == 0 and self.vx > 0 and self.collide_fl != 1:
                     if (self.sheet == hero_standing_sheet or self.sheet == hero_falling_sheet or
-                            self.sheet == hero_lstanding_sheet or self.sheet == hero_lfalling_sheet or
+                        self.sheet == hero_lstanding_sheet or self.sheet == hero_lfalling_sheet or
                             self.sheet == hero_lrunning_sheet):
                         self.change_sheet(hero_running_sheet, 12, 1)
                 elif self.vy == 0 and self.vx < 0 and self.collide_fl != 2:
@@ -606,7 +606,7 @@ class MainCharacter(pygame.sprite.Sprite):
                     if x > 0:
                         self.rect.right = p.rect.left + 2
                     elif x < 0:
-                        self.rect.left = p.rect.right - 1
+                        self.rect.left = p.rect.right - 3
                     self.vx = 0
                 else:
                     self.collide_fl = 0
