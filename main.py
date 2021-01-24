@@ -982,6 +982,10 @@ def game():
             if not (hero.death or game_over):
                 fruit.collide(hero)
         if (hero.death or game_over) and not hero.finish:
+            hero.apple_counter = 0
+            hero.banana_counter = 0
+            hero.melon_counter = 0
+            hero.strawberry_counter = 0
             game_over = True
             gms = game_over_sign(mode)
             screen.blit(gms[0], (gms[1], gms[2]))
