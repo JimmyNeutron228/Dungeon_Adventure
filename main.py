@@ -701,6 +701,7 @@ class Camera:
 
 # Функция для загрузки меню
 def load_menu():
+    global level_tutor_playing
     menu = load_image('Sprites/Terrain', 'menu.png')
     play_button = load_image('Sprites/Terrain', 'button_pressed.png', -1)
     tutor_button = load_image('Sprites/Terrain', 'tutor_button.png', -1)
@@ -730,6 +731,7 @@ def load_menu():
                 if play_fl:
                     return 'play'
                 if tutor_fl:
+                    level_tutor_playing = True
                     return 'tutorial'
 
 
@@ -1011,12 +1013,15 @@ def restart_level():
     global signs
     for sprite in all_sprites:
         sprite.kill()
-    hero = load_level(f'level_{level}.txt')
+    if level_tutor_playing:
+        hero = load_level('level_tutorial.txt')
+    else:
+        hero = load_level(f'level_{level}.txt')
     return hero
 
 
 def ending_sign(text, y, all_signs):
-    font = pygame.font.Font(None, 50)
+    font = pygame.font.Font(None, 70)
     text = font.render(text, True, (0, 0, 0))
     text_x, text_y = WIDTH // 2 - text.get_width() // 2, y
     all_signs.append([text, [text_x, text_y]])
@@ -1027,21 +1032,21 @@ def game_ending():
     ending = load_image('Sprites/Terrain', 'ending.png', -1)
     clock = pygame.time.Clock()
     all_signs = []
-    ending_sign('Planning:', HEIGHT + 50, all_signs)
+    ending_sign('Planning:', HEIGHT + 30, all_signs)
     ending_sign('Thomas Lyugge   Danil Kovalev', HEIGHT + 100, all_signs)
-    ending_sign('Art Work:', HEIGHT + 170, all_signs)
-    ending_sign('Thomas Lyugge   Danil Kovalev', HEIGHT + 220, all_signs)
-    ending_sign('Title Design:', HEIGHT + 290, all_signs)
-    ending_sign('Thomas Lyugge   Danil Kovalev', HEIGHT + 340, all_signs)
-    ending_sign('Interface Design:', HEIGHT + 410, all_signs)
-    ending_sign('Thomas Lyugge   Danil Kovalev', HEIGHT + 460, all_signs)
-    ending_sign('Motion Animators:', HEIGHT + 530, all_signs)
-    ending_sign('Thomas Lyugge   Danil Kovalev', HEIGHT + 580, all_signs)
-    ending_sign('Programmers:', HEIGHT + 650, all_signs)
-    ending_sign('Thomas Lyugge   Danil Kovalev', HEIGHT + 700, all_signs)
-    ending_sign('Special Thanks To:', HEIGHT + 770, all_signs)
-    ending_sign('Ksenofontov Alexey', HEIGHT + 820, all_signs)
-    ending_sign('Thank you for playing our game!!!', HEIGHT + 930, all_signs)
+    ending_sign('Art Work:', HEIGHT + 200, all_signs)
+    ending_sign('Thomas Lyugge   Danil Kovalev', HEIGHT + 270, all_signs)
+    ending_sign('Title Design:', HEIGHT + 370, all_signs)
+    ending_sign('Thomas Lyugge   Danil Kovalev', HEIGHT + 440, all_signs)
+    ending_sign('Interface Design:', HEIGHT + 540, all_signs)
+    ending_sign('Thomas Lyugge   Danil Kovalev', HEIGHT + 610, all_signs)
+    ending_sign('Motion Animators:', HEIGHT + 710, all_signs)
+    ending_sign('Thomas Lyugge   Danil Kovalev', HEIGHT + 780, all_signs)
+    ending_sign('Programmers:', HEIGHT + 880, all_signs)
+    ending_sign('Thomas Lyugge   Danil Kovalev', HEIGHT + 950, all_signs)
+    ending_sign('Special Thanks To:', HEIGHT + 1050, all_signs)
+    ending_sign('Ksenofontov Alexey', HEIGHT + 1120, all_signs)
+    ending_sign('Thank you for playing our game!!!', HEIGHT + 1220, all_signs)
     screen.blit(ending, (0, 0))
     pygame.display.flip()
     while True:
@@ -1079,36 +1084,28 @@ def start_game():
 # Создание всех объектов, главный игровой цикл и отслеживание всех событий в игре
 if __name__ == '__main__':
     level = 1
+    level_tutor_playing = False
     hero = start_game()
     while True:
         answer = game()
         if answer == 'menu':
+            level_tutor_playing = False
             hero = start_game()
         elif answer == 'restart':
             hero = restart_level()
         elif answer == 'next':
-            level += 1
-            if level > MAX_LEVEL:
-                level = 1
-                for sprite in all_sprites:
-                    sprite.kill()
-                game_ending()
-                terminate()
-            else:
-                for sprite in all_sprites:
-                    sprite.kill()
-            hero = load_level(f'level_{level}.txt')
-            if level == 'tutorial':
-                level = 1
-                for sprite in all_sprites:
-                    sprite.kill()
-                hero = load_level(f'level_{level}.txt')
+            if level_tutor_playing:
+                level_tutor_playing = False
+                hero = start_game()
             else:
                 level += 1
                 if level > MAX_LEVEL:
                     level = 1
-                    hero = start_game()
+                    for sprite in all_sprites:
+                        sprite.kill()
+                    game_ending()
+                    terminate()
                 else:
                     for sprite in all_sprites:
                         sprite.kill()
-                    hero = load_level(f'level_{level}.txt')
+                hero = load_level(f'level_{level}.txt')
