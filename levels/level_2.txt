@@ -1,13 +1,38 @@
-background blue
-mush 600 250
-plant 1000 258 left
-spikes 288 236 3
-spikes -500 500 1000 1
-saw 1100 258 1
-finish 860 240
-hero 100 100
-grass 0 300 23 hor
-grass 288 252
-grass 800 252
-banana 0 200 23
-print 100 100 40 level 2
+background pink
+v_orange_stone 0 260 5 ver
+v_orange_stone 3104 260 5 ver
+black_grass 0 500 65 hor
+black_grass 480 452
+black_grass 1344 404 2 vert
+banana 1450 468 3
+g_orange_stone 565 400
+apple 572 374 1
+g_orange_stone 730 340
+apple 742 314 1
+g_orange_stone 820 392
+apple 832 368 1
+g_orange_stone 940 310
+apple 952 284 1
+g_orange_stone 1100 392
+apple 1112 368 1
+g_orange_stone 1250 350
+apple 1262 324 1
+spikes 528 484 51
+plant 1348 362 left
+finish 2950 436
+hero 2000 450
+saw 1600 460 6
+saw 1620 355
+saw 1652 320
+saw 1688 300 4
+v_orange_stone 2096 452
+g_orange_stone 2096 440
+v_orange_stone 2700 452
+g_orange_stone 2668 440
+g_orange_stone 1760 404 2 hor
+v_orange_stone 1856 404 2 vert
+melon 1780 372 3
+plant 2110 458 right
+strawberry 2310 468 8
+plant 2660 458 left
+print 50 50 40 level 2
