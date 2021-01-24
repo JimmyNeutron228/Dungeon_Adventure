@@ -144,7 +144,7 @@ class Bullet(pygame.sprite.Sprite):
                 self.kill()
 
     def fly(self):
-        if self.rect.x == -16 or self.rect.x == 816:
+        if self.rect.x <= -16 or self.rect.x >= 816:
             self.kill()
         elif self.direction == 'left':
             self.rect.x -= 5

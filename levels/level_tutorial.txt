@@ -1,11 +1,15 @@
 background green
 v_brown_stone 0 260 5 ver
 v_brown_stone 3104 260 5 ver
+strawberry 3078 468 1
 white_grass 0 500 65 hor
 white_grass 1776 452
 white_grass 2496 452
+strawberry 2010 468 9
 v_brown_stone 300 452
+banana 292 428 1
 v_brown_stone 450 356 3 ver
+banana 442 332 1
 v_brown_stone 600 164 6 ver
 v_brown_stone 728 164 1 ver
 g_brown_stone 728 196 1 hor
@@ -13,14 +17,19 @@ v_brown_stone 776 196 5 ver
 v_brown_stone 728 260 5 ver
 g_brown_stone 600 164 3 hor
 g_brown_stone 696 450
+apple 700 428 1
 g_brown_stone 600 350
+apple 610 328 1
 g_brown_stone 696 250
+apple 700 228 1
+melon 1110 468 1
+melon 1254 468 1
 mush 2400 404
 hero 50 450
 finish 2784 436
 spikes 1008 484 6
 spikes 1152 484 6
 spikes 1296 484 18
-print 50 50 30 Нажимайте стрелочки влево вправо чтобы герой двигался
-print 50 80 30 Нажмите стрелочку вверх чтобы подпрыгнуть
-print 50 110 30 Нажмите стрелочку вверх два раза чтобы сделать двойной прыжок
+print 50 50 25 Нажимайте стрелочки влево вправо чтобы герой двигался
+print 50 80 25 Нажмите стрелочку вверх чтобы подпрыгнуть
+print 50 110 25 Нажмите стрелочку вверх два раза чтобы сделать двойной прыжок
