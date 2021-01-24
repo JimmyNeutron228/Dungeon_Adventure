@@ -1030,11 +1030,17 @@ if __name__ == '__main__':
         elif answer == 'restart':
             hero = restart_level()
         elif answer == 'next':
-            level += 1
-            if level > MAX_LEVEL:
+            if level == 'tutorial':
                 level = 1
-                hero = start_game()
-            else:
                 for sprite in all_sprites:
                     sprite.kill()
                 hero = load_level(f'level_{level}.txt')
+            else:
+                level += 1
+                if level > MAX_LEVEL:
+                    level = 1
+                    hero = start_game()
+                else:
+                    for sprite in all_sprites:
+                        sprite.kill()
+                    hero = load_level(f'level_{level}.txt')
