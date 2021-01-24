@@ -720,7 +720,7 @@ def load_menu():
                     screen.blit(play_button, (312, 281))
                     pygame.display.flip()
                     play_fl = 1
-                if 487 + 30 >= ev.pos[0] >= 312 + 30 and 357 + 90 >= ev.pos[1] >= 281 + 90:
+                if 462 >= ev.pos[0] >= 312 + 30 and 357 + 80 >= ev.pos[1] >= 281 + 90:
                     screen.blit(tutor_button, (312 + 30, 281 + 90))
                     pygame.display.flip()
                     tutor_fl = 1
@@ -859,7 +859,7 @@ def game():
             elif game_over and not hero.finish:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if hero.death or game_over:
-                        if 487 - 60 >= event.pos[0] >= 312 - 60 and 457 >= event.pos[1] >= 381:
+                        if 487 >= event.pos[0] >= 312 - 60 and 457 >= event.pos[1] >= 381:
                             screen.blit(return_to_menu_black, (312 - 60, 381))
                             pygame.display.flip()
                             menu_fl = 1
@@ -1121,7 +1121,11 @@ def start_game():
         sprite.kill()
     answer = load_menu()
     if answer == 'play':
-        hero = load_level(f'level_{level}.txt')
+        if level <= MAX_LEVEL:
+            hero = load_level(f'level_{level}.txt')
+        else:
+            game_ending()
+            terminate()
     elif answer == 'tutorial':
         hero = load_level('level_tutorial.txt')
     return hero
