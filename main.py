@@ -378,9 +378,9 @@ class Fruit(pygame.sprite.Sprite):
                 obj.apple_counter += 1
             if self.name == 'banana':
                 obj.banana_counter += 1
-            if self.name == 'apple':
+            if self.name == 'melon':
                 obj.melon_counter += 1
-            if self.name == 'apple':
+            if self.name == 'strawberry':
                 obj.strawberry_counter += 1
             self.kill()
 
@@ -736,7 +736,7 @@ def load_menu():
 
 
 def exec_strings_from_level(string):
-    global signs
+    global signs, fruit_dict
     if 'grass' in string[0] or 'stone' in string[0]:
         if len(string) == 3:
             Platform(string[0], (int(string[1]), int(string[2])))
@@ -749,6 +749,7 @@ def exec_strings_from_level(string):
                     Platform(string[0], (int(string[1]), int(string[2]) + i * 48))
     elif string[0] in fruit_images.keys():
         for i in range(int(string[3])):
+            fruit_dict[string[0]] += 1
             Fruit(string[0], (int(string[1]) + i * 32, int(string[2])))
     elif string[0] == 'background':
         bg_sheet = load_back_ground(bg_colors[string[1]])
@@ -809,6 +810,12 @@ def load_back_ground(dirname):
         for x in range(((WIDTH + sprite_width - 1) // sprite_width + 10) * 30):
             back_ground_surface.blit(dirname, (x * sprite_width, y * sprite_height))
     return back_ground_surface
+
+
+def print_fruits(name, collected_fruits, all_fruits):
+    font = pygame.font.Font(None, 40)
+    text = font.render(name + ' ' + str(collected_fruits) + '/' + str(all_fruits), True, (0, 0, 0))
+    return text
 
 
 # Функция игрового процесса
@@ -987,6 +994,15 @@ def game():
             else:
                 screen.blit(return_to_play_white, (430, 381))
         elif hero.finish and not (hero.death or game_over):
+            apple_counter = print_fruits('apple', hero.apple_counter, fruit_dict['apple'])
+            banana_counter = print_fruits('banana', hero.banana_counter, fruit_dict['banana'])
+            melon_counter = print_fruits('melon', hero.melon_counter, fruit_dict['melon'])
+            strawberry_counter = print_fruits('strawberry', hero.strawberry_counter,
+                                              fruit_dict['strawberry'])
+            screen.blit(apple_counter, (10, 240))
+            screen.blit(banana_counter, (190, 240))
+            screen.blit(melon_counter, (390, 240))
+            screen.blit(strawberry_counter, (570, 240))
             greeting_sign = some_finish_word(word, mode)
             screen.blit(greeting_sign[0], (greeting_sign[1], greeting_sign[2]))
             if menu_fl:
@@ -1010,7 +1026,13 @@ def game():
 
 
 def restart_level():
-    global signs
+    global signs, fruit_dict
+    fruit_dict = {
+        'apple': 0,
+        'banana': 0,
+        'melon': 0,
+        'strawberry': 0
+    }
     for sprite in all_sprites:
         sprite.kill()
     if level_tutor_playing:
@@ -1069,7 +1091,13 @@ def game_ending():
         clock.tick(FPS)
 
 def start_game():
-    global signs, level
+    global signs, level, fruit_dict
+    fruit_dict = {
+        'apple': 0,
+        'banana': 0,
+        'melon': 0,
+        'strawberry': 0
+    }
     signs = []
     for sprite in all_sprites:
         sprite.kill()
