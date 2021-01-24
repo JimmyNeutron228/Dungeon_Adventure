@@ -147,9 +147,9 @@ class Bullet(pygame.sprite.Sprite):
         if self.rect.x <= -16 or self.rect.x >= 816:
             self.kill()
         elif self.direction == 'left':
-            self.rect.x -= 5
+            self.rect.x -= MOVE_SPEED
         elif self.direction == 'right':
-            self.rect.x += 5
+            self.rect.x += MOVE_SPEED
 
     def hero_collide(self, obj):
         if pygame.sprite.collide_mask(self, obj) and obj.death is False and obj.finish is False:
