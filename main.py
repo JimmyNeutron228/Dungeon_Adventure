@@ -748,8 +748,8 @@ def exec_strings_from_level(string):
                 for i in range(int(string[3])):
                     Platform(string[0], (int(string[1]), int(string[2]) + i * 48))
     elif string[0] in fruit_images.keys():
+        fruit_dict[string[0]] += int(string[3])
         for i in range(int(string[3])):
-            fruit_dict[string[0]] += 1
             Fruit(string[0], (int(string[1]) + i * 32, int(string[2])))
     elif string[0] == 'background':
         bg_sheet = load_back_ground(bg_colors[string[1]])
@@ -789,6 +789,13 @@ def exec_strings_from_level(string):
 
 # Функция для загрузки уровня из текстового файла
 def load_level(filename):
+    global fruit_dict
+    fruit_dict = {
+        'apple': 0,
+        'banana': 0,
+        'melon': 0,
+        'strawberry': 0
+    }
     filename = 'levels/' + filename
     hero = None
     with open(filename, mode='r', encoding='utf-8') as map_file:
@@ -820,7 +827,7 @@ def print_fruits(name, collected_fruits, all_fruits):
 
 # Функция игрового процесса
 def game():
-    global hero, seconds_counter, mode
+    global hero, seconds_counter, mode, level
     words = ["YOU'RE GREAT!!!", 'GOOD JOB!!!', 'YOU DA BEST!!!', "WHO'S AWESOME?!",
              "WHAT A PLAY!!!"]
     word = random.choice(words)
@@ -1026,6 +1033,12 @@ def game():
         seconds_counter += 1
         clock.tick(FPS)
     signs.clear()
+    if hero.finish and answer != 'restart':
+        level += 1
+    hero.apple_counter = 0
+    hero.banana_counter = 0
+    hero.melon_counter = 0
+    hero.strawberry_counter = 0
     return answer
 
 
@@ -1094,6 +1107,7 @@ def game_ending():
         pygame.display.flip()
         clock.tick(FPS)
 
+
 def start_game():
     global signs, level, fruit_dict
     fruit_dict = {
@@ -1128,9 +1142,9 @@ if __name__ == '__main__':
         elif answer == 'next':
             if level_tutor_playing:
                 level_tutor_playing = False
+                level -= 1
                 hero = start_game()
             else:
-                level += 1
                 if level > MAX_LEVEL:
                     level = 1
                     for sprite in all_sprites:
