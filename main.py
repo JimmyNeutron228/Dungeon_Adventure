@@ -10,7 +10,7 @@ SIZE = WIDTH, HEIGHT = 800, 600
 FPS = 60
 MOVE_SPEED = 4
 JUMP_POWER = 7
-MAX_LEVEL = 4
+MAX_LEVEL = 3
 GRAVITY = 0.3
 TITLES_SPEED = -1
 screen = pygame.display.set_mode(SIZE)
@@ -1140,4 +1140,8 @@ if __name__ == '__main__':
                 else:
                     for sprite in all_sprites:
                         sprite.kill()
-                hero = load_level(f'level_{level}.txt')
+                    hero = load_level(f'level_{level}.txt')
+        hero.apple_counter = 0
+        hero.banana_counter = 0
+        hero.melon_counter = 0
+        hero.strawberry_counter = 0
