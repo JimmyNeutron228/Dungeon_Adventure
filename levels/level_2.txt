@@ -20,7 +20,7 @@ apple 1262 324 1
 spikes 528 484 51
 plant 1348 362 left
 finish 2950 436
-hero 2000 450
+hero 50 450
 saw 1600 460 6
 saw 1620 355
 saw 1652 320
