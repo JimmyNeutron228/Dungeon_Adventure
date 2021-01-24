@@ -9,9 +9,10 @@ pygame.init()
 SIZE = WIDTH, HEIGHT = 800, 600
 FPS = 60
 MOVE_SPEED = 4
-JUMP_POWER = 7
+JUMP_POWER = 6.5
 MAX_LEVEL = 4
 GRAVITY = 0.3
+TITLES_SPEED = -1
 screen = pygame.display.set_mode(SIZE)
 pygame.display.set_caption("Fruit Ninja 2.0")
 clock = pygame.time.Clock()
@@ -426,7 +427,7 @@ class Platform(pygame.sprite.Sprite):
 # Класс шипов
 class Traps(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos, inv=0):
-        if inv  == 0:
+        if inv == 0:
             super().__init__(traps_group, all_sprites)
         else:
             super().__init__(traps_invisible_group, all_sprites)
@@ -701,27 +702,35 @@ class Camera:
 # Функция для загрузки меню
 def load_menu():
     menu = load_image('Sprites/Terrain', 'menu.png')
-    button = load_image('Sprites/Terrain', 'button_pressed.png', -1)
-    music_mp3 = load_image('Sprites/Terrain', 'music.png')
+    play_button = load_image('Sprites/Terrain', 'button_pressed.png', -1)
+    tutor_button = load_image('Sprites/Terrain', 'tutor_button.png', -1)
+    music_mp3 = load_image('Sprites/Terrain', 'music.png', -1)
     screen.blit(menu, (0, 0))
     screen.blit(music_mp3, (700, 450))
     pygame.display.flip()
-    fl = 0
+    play_fl = 0
+    tutor_fl = 0
     while True:
         for ev in pygame.event.get():
             if ev.type == pygame.QUIT:
                 terminate()
             elif ev.type == pygame.MOUSEBUTTONDOWN:
                 if 487 >= ev.pos[0] >= 312 and 357 >= ev.pos[1] >= 281:
-                    screen.blit(button, (312, 281))
+                    screen.blit(play_button, (312, 281))
                     pygame.display.flip()
-                    fl = 1
+                    play_fl = 1
+                if 487 + 30 >= ev.pos[0] >= 312 + 30 and 357 + 90 >= ev.pos[1] >= 281 + 90:
+                    screen.blit(tutor_button, (312 + 30, 281 + 90))
+                    pygame.display.flip()
+                    tutor_fl = 1
                 if 775 >= ev.pos[0] >= 700 and 525 >= ev.pos[1] >= 450:
                     pygame.display.flip()
                     music()
             elif ev.type == pygame.MOUSEBUTTONUP:
-                if fl:
+                if play_fl:
                     return 'play'
+                if tutor_fl:
+                    return 'tutorial'
 
 
 def exec_strings_from_level(string):
@@ -1006,6 +1015,54 @@ def restart_level():
     return hero
 
 
+def ending_sign(text, y, all_signs):
+    font = pygame.font.Font(None, 50)
+    text = font.render(text, True, (0, 0, 0))
+    text_x, text_y = WIDTH // 2 - text.get_width() // 2, y
+    all_signs.append([text, [text_x, text_y]])
+
+
+def game_ending():
+    pygame.mixer.music.stop()
+    ending = load_image('Sprites/Terrain', 'ending.png', -1)
+    clock = pygame.time.Clock()
+    all_signs = []
+    ending_sign('Planning:', HEIGHT + 50, all_signs)
+    ending_sign('Thomas Lyugge   Danil Kovalev', HEIGHT + 100, all_signs)
+    ending_sign('Art Work:', HEIGHT + 170, all_signs)
+    ending_sign('Thomas Lyugge   Danil Kovalev', HEIGHT + 220, all_signs)
+    ending_sign('Title Design:', HEIGHT + 290, all_signs)
+    ending_sign('Thomas Lyugge   Danil Kovalev', HEIGHT + 340, all_signs)
+    ending_sign('Interface Design:', HEIGHT + 410, all_signs)
+    ending_sign('Thomas Lyugge   Danil Kovalev', HEIGHT + 460, all_signs)
+    ending_sign('Motion Animators:', HEIGHT + 530, all_signs)
+    ending_sign('Thomas Lyugge   Danil Kovalev', HEIGHT + 580, all_signs)
+    ending_sign('Programmers:', HEIGHT + 650, all_signs)
+    ending_sign('Thomas Lyugge   Danil Kovalev', HEIGHT + 700, all_signs)
+    ending_sign('Special Thanks To:', HEIGHT + 770, all_signs)
+    ending_sign('Ksenofontov Alexey', HEIGHT + 820, all_signs)
+    ending_sign('Thank you for playing our game!!!', HEIGHT + 930, all_signs)
+    screen.blit(ending, (0, 0))
+    pygame.display.flip()
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if all_signs[-1][1][1] < HEIGHT // 2:
+                    return
+        screen.blit(ending, (0, 0))
+        for sign in all_signs:
+            if sign[0].get_rect().bottom >= -10:
+                screen.blit(sign[0], sign[1])
+            if sign == all_signs[-1]:
+                if sign[1][1] >= HEIGHT // 2:
+                    sign[1][1] += TITLES_SPEED
+            elif sign[0].get_rect().bottom >= -10:
+                sign[1][1] += TITLES_SPEED
+        pygame.display.flip()
+        clock.tick(FPS)
+
 def start_game():
     global signs, level
     signs = []
@@ -1014,14 +1071,14 @@ def start_game():
     answer = load_menu()
     if answer == 'play':
         hero = load_level(f'level_{level}.txt')
-    else:
+    elif answer == 'tutorial':
         hero = load_level('level_tutorial.txt')
     return hero
 
 
 # Создание всех объектов, главный игровой цикл и отслеживание всех событий в игре
 if __name__ == '__main__':
-    level = 'tutorial'
+    level = 1
     hero = start_game()
     while True:
         answer = game()
@@ -1033,8 +1090,11 @@ if __name__ == '__main__':
             level += 1
             if level > MAX_LEVEL:
                 level = 1
-                hero = start_game()
+                for sprite in all_sprites:
+                    sprite.kill()
+                game_ending()
+                terminate()
             else:
                 for sprite in all_sprites:
                     sprite.kill()
-                hero = load_level(f'level_{level}.txt')
+            hero = load_level(f'level_{level}.txt')
