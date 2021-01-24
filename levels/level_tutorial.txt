@@ -1,15 +1,26 @@
 background green
-white_grass 0 500 20 hor
+v_brown_stone 0 260 5 ver
+v_brown_stone 3104 260 5 ver
+white_grass 0 500 65 hor
+white_grass 1776 452
+white_grass 2496 452
 v_brown_stone 300 452
-v_brown_stone 450 354 3 ver
+v_brown_stone 450 356 3 ver
 v_brown_stone 600 164 6 ver
 v_brown_stone 728 164 1 ver
+g_brown_stone 728 196 1 hor
+v_brown_stone 776 196 5 ver
 v_brown_stone 728 260 5 ver
 g_brown_stone 600 164 3 hor
 g_brown_stone 696 450
 g_brown_stone 600 350
 g_brown_stone 696 250
+mush 2400 404
 hero 50 450
-print 100 100 30 Нажимайте стрелочки влево вправо чтобы герой двигался
-print 100 130 30 Нажмите стрелочку вверх чтобы подпрыгнуть
-print 100 160 30 Нажмите стрелочку вверх два раза чтобы сделать двойной прыжок
+finish 2784 436
+spikes 1008 484 6
+spikes 1152 484 6
+spikes 1296 484 18
+print 50 50 30 Нажимайте стрелочки влево вправо чтобы герой двигался
+print 50 80 30 Нажмите стрелочку вверх чтобы подпрыгнуть
+print 50 110 30 Нажмите стрелочку вверх два раза чтобы сделать двойной прыжок

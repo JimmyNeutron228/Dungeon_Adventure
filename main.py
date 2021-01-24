@@ -9,7 +9,7 @@ pygame.init()
 SIZE = WIDTH, HEIGHT = 800, 600
 FPS = 60
 MOVE_SPEED = 4
-JUMP_POWER = 6.5
+JUMP_POWER = 7
 MAX_LEVEL = 4
 GRAVITY = 0.3
 TITLES_SPEED = -1
@@ -1098,3 +1098,17 @@ if __name__ == '__main__':
                 for sprite in all_sprites:
                     sprite.kill()
             hero = load_level(f'level_{level}.txt')
+            if level == 'tutorial':
+                level = 1
+                for sprite in all_sprites:
+                    sprite.kill()
+                hero = load_level(f'level_{level}.txt')
+            else:
+                level += 1
+                if level > MAX_LEVEL:
+                    level = 1
+                    hero = start_game()
+                else:
+                    for sprite in all_sprites:
+                        sprite.kill()
+                    hero = load_level(f'level_{level}.txt')
