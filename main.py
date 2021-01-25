@@ -10,7 +10,7 @@ SIZE = WIDTH, HEIGHT = 800, 600
 FPS = 60
 MOVE_SPEED = 4
 JUMP_POWER = 7
-MAX_LEVEL = 3
+MAX_LEVEL = 2
 GRAVITY = 0.3
 TITLES_SPEED = -1
 screen = pygame.display.set_mode(SIZE)
@@ -859,7 +859,7 @@ def game():
             elif game_over and not hero.finish:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if hero.death or game_over:
-                        if 487 >= event.pos[0] >= 312 - 60 and 457 >= event.pos[1] >= 381:
+                        if 487 - 80 >= event.pos[0] >= 312 - 60 and 457 >= event.pos[1] >= 381:
                             screen.blit(return_to_menu_black, (312 - 60, 381))
                             pygame.display.flip()
                             menu_fl = 1
