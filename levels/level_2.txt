@@ -35,4 +35,4 @@ melon 1780 372 3
 plant 2110 458 right
 strawberry 2310 468 8
 plant 2660 458 left
-print 50 50 40 level 2
+print 50 50 40 Level 2
