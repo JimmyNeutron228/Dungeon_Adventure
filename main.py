@@ -10,7 +10,7 @@ SIZE = WIDTH, HEIGHT = 800, 600
 FPS = 60
 MOVE_SPEED = 4
 JUMP_POWER = 7
-MAX_LEVEL = 2
+MAX_LEVEL = 3
 GRAVITY = 0.3
 TITLES_SPEED = -1
 screen = pygame.display.set_mode(SIZE)
@@ -188,7 +188,7 @@ class Plant(pygame.sprite.Sprite):
 
     def shoot(self):
         if not self.death:
-            if self.shoot_time + 3 <= time.monotonic():
+            if self.shoot_time + 2 <= time.monotonic():
                 self.shoot_time = time.monotonic()
                 if self.direction == 'left':
                     poss = (self.rect.x + 5, self.rect.y + 10)
@@ -261,7 +261,7 @@ class Mushroom(pygame.sprite.Sprite):
             obj.vy = -3
 
     def hero_collide(self, obj):
-        if pygame.sprite.collide_mask(self, obj) and self.death is False:
+        if pygame.sprite.collide_mask(self, obj) and self.death is False and obj.finish is False:
             obj.game_over()
 
     def cut_sheets(self, sheet, columns, rows):

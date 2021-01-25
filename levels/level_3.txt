@@ -1,13 +1,36 @@
 background blue
-mush 600 250
-plant 1000 258 left
-spikes 288 236 3
-spikes -500 500 1000 1
-saw 1100 258 1
-finish 860 240
-hero 100 100
-grass 0 300 23 hor
-grass 288 252
-grass 800 252
-banana 0 200 23
-print 100 100 40 level 3
+v_gray_stone 0 260 5 ver
+v_gray_stone 3104 260 5 ver
+grass 0 500 65 hor
+grass 480 452
+grass 816 452
+mush 530 452
+plant 822 410 left
+melon 600 470 5
+saw 1300 450
+saw 1380 400
+saw 1450 460
+spikes 1490 484 12
+saw 1762 400
+saw 1682 460
+saw 1850 460 8
+hero 50 450
+print 50 50 40 Level 3
+v_gray_stone 2400 164 7 ver
+g_gray_stone 2352 450
+g_gray_stone 2352 350
+g_gray_stone 2352 250
+g_gray_stone 2352 150 2 hor
+spikes 2352 234
+banana 2365 220 1
+spikes 2352 334
+banana 2365 320 1
+spikes 2352 434
+banana 2365 420 1
+melon 2627 470 1
+saw 2425 460 5
+saw 2665 460 5
+strawberry 950 458 5
+apple 1370 458 2
+apple 1755 458 2
+finish 3000 436
